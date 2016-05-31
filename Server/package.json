@@ -1,0 +1,16 @@
+{
+  "name": "databasefiller",
+  "version": "0.0.1",
+  "description": "Used to fill Ititour's database easily",
+  "main": "DatabaseFiller.js",
+  "dependencies": {
+    "http": "^0.0.0",
+    "mongodb": "^2.1.20"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mathieu Fontenille",
+  "license": "ISC"
+}
