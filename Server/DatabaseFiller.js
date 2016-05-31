@@ -2,7 +2,7 @@ var http = require('http');
 var fs = require('fs');
 
 var mongo = require('mongodb').MongoClient;
-var serverAddress = "mongodb://192.168.43.206:27017/ititourContent";
+var serverAddress = "mongodb://192.168.0.37:27017/ititourContent";
 
 mongo.connect(serverAddress, function (err, db) {
     if (err)
@@ -22,18 +22,19 @@ mongo.connect(serverAddress, function (err, db) {
             response.end();
         });
     }).listen(8080);
+    var io = require('socket.io').listen(webServer);
 
-
-
-    db.collection('site', function (err, col) {
-        col.insert({
-            name: arrays.toString(),
-            //temperature: parseFloat(message.toString()),  OLD
-            temperature: parseFloat(valueBuffer[actualBuffer][arrays].message).toFixed(2),
-            time: dateForDatabase
+    io.sockets.on('connection', function(socket){
+        console.log("J'ai bien reçu un socket de connection");
+        db.collection('ititourContent').find().limit(10).toArray().then(
+            function (items) {
+                socket.emit('lastDatas', {datas: items});
+                return;
+            }
+        );
+        socket.on('datasToPush', function () {
+            
         });
-
-
-
     });
+
 });

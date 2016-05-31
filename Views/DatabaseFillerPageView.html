@@ -3,12 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <title>Remplisseur de base de données</title>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <style>
+        #chat{
+            height: 60vh;
+            overflow:auto;
+            background-color: darkgray;
+            font-size : 120%;
+            padding-top: 1vh;
+            margin-bottom: 20px;
+
+            border-top-left-radius: 0px;
+            border-top-right-radius: 10px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        input{
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: none;
+            background-color: #e8eef0;
+            color: black;
+        }
+        #name,#note,#keywords,#villagesList,#sitesList,#desc{
+            display: none;
+        }
+    </style>
 </head>
     <body>
-        <form>
-            <input type="text" placeholder="Que voullez-vous modifier ?">
+        <h2>Avant d'utiliser cet outil consultez la notice en bas de page</h2>
+        <form id="dataType">
+            <table>
+                <p>Précisez le type de donnée à rentrer</p>
+                <tr>
+                    <th>Département</th>
+                    <th>Ville/Village</th>
+                    <th>Site touristique</th>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="isDepartement"></td>
+                    <td><input type="checkbox" id="isVille"></td>
+                    <td><input type="checkbox" id="isSite"></td>
+                </tr>
+            </table>
+        </form>
+            <input type="text" placeholder="Le nom du dep/village/site" id="name">
+            <input type="number" placeholder="Note de 0 à 5" id="note">
+            <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par un espace)" id="keywords">
+            <input type="text" placeholder="Liste des villes et villages du département séparés par un espace et rien d'autre" id="villagesList">
+            <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par un espace et rien d'autre" id="sitesList">
+            <input type="text" placeholder="Description de l'élément" id="desc">
         </form>
 
+        <div id="chat"></div>
+        <h3>Bienvenue sur l'outil de remplissage de la base de données d'Ititour</h3>
+        <p>La grande partie grise vous montre les dernières données qui ont été rentrées<br>
+        Quand vous souhaitez ajouter des données il est préférable de le faire dans cet ordre :<br>
+            Créer le département (si ce n'est pas déjà fait)<br>
+            Créer le village/ville<br>
+            Créer les sites touristiques<br>
+
+        Si vous voullez entrer un village utilisez le mot ville (la base de données se moque
+            de la subtile différence entre une ville et un village)<br>
+        Un site peut être une cathédrale, un pont, un panorama, etc un point d'interrêt que vous souhaitez traiter
+        </p>
 
     </body>
 </html>
+
+
+<script>
+    var chat = document.getElementById('chat');
+    var server = ('192.168.0.32:8080');
+    var socket = io.connect(server);
+
+    socket.on('lastDatas', function (data) {
+        console.log('socket.on lastDatas : ' + data.datas);
+        for(arrays in data.datas) {
+            postToChat(data.datas);
+        }
+    });
+    var dataTypeCheckboxes = document.getElementById('dataType');
+    var isDepartement = document.getElementById('isDepartement');
+    var isVille = document.getElementById('isVille');
+    var isSite = document.getElementById('isSite');
+    var nameField = document.getElementById('name');
+    var noteField = document.getElementById('note');
+    var keywordsField = document.getElementById('keywords');
+    var villageListField = document.getElementById('villagesList');
+    var sitesListField = document.getElementById('sitesList');
+    var descField = document.getElementById('desc');
+
+    dataTypeCheckboxes.addEventListener('click', function () {
+        console.log('la bool est ' + isDepartement.checked);
+        if (isDepartement.checked == true){
+            nameField.style.display = "inline";
+            noteField.style.display = "inline";
+            descField.style.display = "inline";
+            villageListField.style.display = "inline";
+            keywordsField.style.display = "none";
+            sitesListField.style.display = "none";
+        }
+        else if (isVille.checked == true){
+            nameField.style.display = "inline";
+            noteField.style.display = "inline";
+            descField.style.display = "inline";
+            villageListField.style.display = "none";
+            keywordsField.style.display = "inline";
+            sitesListField.style.display = "inline";
+        }
+        else if (isSite.checked == true){
+            nameField.style.display = "inline";
+            noteField.style.display = "inline";
+            descField.style.display = "inline";
+            villageListField.style.display = "none";
+            keywordsField.style.display = "none";
+            sitesListField.style.display = "none";
+        }
+
+    });
+
+
+
+    function pageScroll() {
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function postToChat(data){
+        var parag = document.createElement("p");
+        parag.classList.add('post');
+
+            parag.appendChild(document.createTextNode(data));
+
+        chat.appendChild(parag);
+        pageScroll();
+    }
+
+    function pushIntoDatabase(type, note, keywords, desc, sites, villages){
+        var key = [];
+        if (keywords){
+            keywords = keywords.split(",");
+            console.log(keywords);
+        }
+
+        socket.emit('datasToPush', {
+            type:type,
+            note: parseInt(note),
+            keywords:keywords,
+            desc: desc,
+            sites: "lalal"
+        })
+    }
+
+
+</script>
