@@ -25,15 +25,50 @@ mongo.connect(serverAddress, function (err, db) {
     var io = require('socket.io').listen(webServer);
 
     io.sockets.on('connection', function(socket){
-        console.log("J'ai bien reçu un socket de connection");
+        console.log("Connexion depuis l'adresse : " + socket.request.connection.remoteAddress);
         db.collection('ititourContent').find().limit(10).toArray().then(
             function (items) {
                 socket.emit('lastDatas', {datas: items});
                 return;
             }
         );
-        socket.on('datasToPush', function () {
-            
+        socket.on('datasToPush', function (data) {
+            if(data.type == "Departement"){
+                db.collection('ititourContent', function(err, col){
+                   col.insert({
+                       type: data.type,
+                       name: data.name,
+                       note: data.note,
+                       keywords: data.keywords,
+                       villes: data.villes,
+                       desc: data.desc
+                   });
+                });
+            }
+            else if(data.type == "Ville"){
+                db.collection('ititourContent', function(err, col) {
+                    col.insert({
+                        type: data.type,
+                        name: data.name,
+                        note: data.note,
+                        keywords: data.keywords,
+                        departement: data.departement,
+                        desc: data.desc
+                    });
+                });
+            }
+            else if(data.type == "Site"){
+                db.collection('ititourContent', function(err, col) {
+                    col.insert({
+                        type: data.type,
+                        name: data.name,
+                        note: data.note,
+                        keywords: data.keywords,
+                        linkedVilles: data.linkedVilles,
+                        desc: data.desc
+                    });
+                });
+            }
         });
     });
 

@@ -5,6 +5,10 @@
     <title>Remplisseur de base de données</title>
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <style>
+        html{
+            font-family: Arial Black,Arial Bold,Gadget,sans-serif;
+
+        }
         #chat{
             height: 60vh;
             overflow:auto;
@@ -12,16 +16,13 @@
             font-size : 120%;
             padding-top: 1vh;
             margin-bottom: 20px;
-
-            border-top-left-radius: 0px;
-            border-top-right-radius: 10px;
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
+            border-radius : 10px;
         }
         table, th, td {
             border: 1px solid black;
             border-collapse: collapse;
             text-align: center;
+            background-color: #f4f4f4;
         }
 
         input{
@@ -32,17 +33,39 @@
             border: none;
             background-color: #e8eef0;
             color: black;
+            resize:both;
         }
-        #name,#note,#keywords,#villagesList,#sitesList,#desc,#send,#advices{
+        #desc{
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: none;
+            background-color: #e8eef0;
+            color: black;
+            resize:both;
+        }
+        #name,#note,#keywords,#villagesList,#sitesList,#desc,#send,#advices, #linkedDepartement, #linkedVille{
             display: none;
         }
-        #send:hover, #advicesButton:hover {
+
+        #send {
+            background-color: #555555;
+            color: white;
+            margin: 10px;
+        }
+        #send:hover {
             background-color: white;
             color: black;
             border: 2px solid #555555;
         }
 
-        #send, #advicesButton {
+        #advicesButton:hover {
+            background-color: white;
+            color: black;
+            border: 2px solid #555555;
+        }
+        #advicesButton {
             background-color: #555555;
             color: white;
             margin: 10px;
@@ -52,17 +75,33 @@
             padding: 10px;
             border-radius: 10px;
             margin-bottom: 10px;
+            color: #424040;
+        }
+        li{
+            margin-top: 5px;
+        }
+        h1{
+            text-align: center;
+            border : 2px solid;
+            border-radius: 10px;
+            width:40vw;
+            margin-right: auto;
+            margin-left: auto;
+            display: block;
+        }
+        h2{
+            display: inline;
+            position: inherit;
         }
 
     </style>
 </head>
     <body>
         <h1>Ititour Database Filler</h1>
-        <h2>V 0.2.0</h2>
+        <h2>v0.2.0</h2>
         <form id="dataType">
             <table>
-                <p>Précisez le type de donnée à rentrer<br>
-                Il faut décocher la case actuelle si vous voullez en choisir une autre</p>
+                <p>Je veux ajouter :</p>
                 <tr>
                     <th>Département</th>
                     <th>Ville/Village</th>
@@ -78,27 +117,29 @@
         <form>
             <p id="fieldDesc"></p>
             <input type="text" placeholder="Le nom du departement/village/site" id="name">
+            <input type="text" placeholder="Le nom du département où se situe cette ville/village" id="linkedDepartement">
+            <input type="text" placeholder="Le nom de la ville où se situe ce site touristique" id="linkedVille">
             <input type="number" placeholder="Note de 0 à 5" id="note">
             <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par un espace)" id="keywords">
             <input type="text" placeholder="Liste des villes et villages du département séparés par un espace et rien d'autre" id="villagesList">
             <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par un espace et rien d'autre" id="sitesList">
-            <input type="text" placeholder="Description de l'élément" id="desc">
+            <textarea id="desc" placeholder="Description de l'élément"></textarea>
             <button id="send">Envoyer directement dans la base de données</button>
         </form>
 
         <button id="advicesButton">Afficher la notice d'utilisation</button>
         <div id="advices">
             <h3>Bienvenue sur l'outil de remplissage de la base de données d'Ititour</h3>
-            <p>La grande partie grise vous montre les dernières données qui ont été rentrées<br>
-                Quand vous souhaitez ajouter des données il est préférable de le faire dans cet ordre :<br>
-                Créer le département (si ce n'est pas déjà fait)<br>
-                Créer le village/ville<br>
-                Créer les sites touristiques<br>
-
-                Si vous voullez entrer un village utilisez le mot ville (la base de données se moque
-                de la subtile différence entre une ville et un village)<br>
-                Un site peut être une cathédrale, un pont, un panorama, etc un point d'interrêt que vous souhaitez traiter
-            </p>
+            <ul>
+                <li>Il est impératif de ne faire aucune faute sur aucun mot et de conserver la même orthographe majuscule et tirets compris pour chaque nom que vous utiliserez</li>
+                <li>L'autre gros cadre gris en dessous vous montre les dernières données qui ont été rentrées</li>
+                <li>La base de données va automatiquement associer les sites touristiques que vous entrerez dans
+                les villes/villages mais pour celà il est nécéssaire que vous entriez le nom des sites avec la même orthographe
+                même chose pour les villes dans la rubrique département</li>
+                <li>Il n'y a aucune importance dans l'odre dans lequel vous entrez les données tant que le site web n'est pas en ligne</li>
+                <li>Un site touristique peut être une cathédrale, un pont, un panorama, etc un point d'interrêt que vous souhaitez traiter</li>
+                <li>Il faut décocher la case actuelle si vous voullez en choisir une autre</li>
+            </ul>
         </div>
 
         <div id="chat"></div>
@@ -122,9 +163,11 @@
     var isVille = document.getElementById('isVille');
     var isSite = document.getElementById('isSite');
     var nameField = document.getElementById('name');
+    var linkedDepartementField = document.getElementById('linkedDepartement');
+    var linkedVilleField = document.getElementById('linkedVille');
     var noteField = document.getElementById('note');
     var keywordsField = document.getElementById('keywords');
-    var villageListField = document.getElementById('villagesList');
+    var villesListField = document.getElementById('villagesList');
     var sitesListField = document.getElementById('sitesList');
     var descField = document.getElementById('desc');
     var fieldDesc = document.getElementById('fieldDesc');
@@ -138,9 +181,11 @@
             nameField.style.display = "inline";
             noteField.style.display = "inline";
             descField.style.display = "inline";
-            villageListField.style.display = "inline";
+            villesListField.style.display = "inline";
             keywordsField.style.display = "none";
             sitesListField.style.display = "none";
+            linkedDepartementField.style.display = "none";
+            linkedVilleField.style.display = "none";
             send.style.display = "inline";
             fieldDesc.innerHTML = "Département";
             isVille.checked = false;
@@ -150,7 +195,9 @@
             nameField.style.display = "inline";
             noteField.style.display = "inline";
             descField.style.display = "inline";
-            villageListField.style.display = "none";
+            linkedDepartementField.style.display = "inline";
+            linkedVilleField.style.display = "none";
+            villesListField.style.display = "none";
             keywordsField.style.display = "inline";
             sitesListField.style.display = "inline";
             send.style.display = "inline";
@@ -162,9 +209,11 @@
             nameField.style.display = "inline";
             noteField.style.display = "inline";
             descField.style.display = "inline";
-            villageListField.style.display = "none";
-            keywordsField.style.display = "none";
+            villesListField.style.display = "none";
+            keywordsField.style.display = "inline";
             sitesListField.style.display = "none";
+            linkedDepartementField.style.display = "none";
+            linkedVilleField.style.display = "inline";
             send.style.display = "inline";
             fieldDesc.innerHTML = "Site tourstique";
             isVille.checked = false;
@@ -174,9 +223,11 @@
             nameField.style.display = "none";
             noteField.style.display = "none";
             descField.style.display = "none";
-            villageListField.style.display = "none";
+            villesListField.style.display = "none";
             keywordsField.style.display = "none";
             sitesListField.style.display = "none";
+            linkedDepartementField.style.display = "none";
+            linkedVilleField.style.display = "none";
             send.style.display = "none";
             fieldDesc.innerHTML = "";
         }
@@ -184,13 +235,18 @@
 
     var isAdviceDisplayed = false;
 
-    advicesButton.addEventListener('click', function () {
+    advicesButton.addEventListener('click', function (e) {
+        e.preventDefault();
         isAdviceDisplayed = !isAdviceDisplayed;
         if (isAdviceDisplayed == true){
             advices.style.display = "inline-block";
         }
         else
             advices.style.display = "none";
+    });
+    send.addEventListener('click', function(e){
+       pushIntoDatabase(nameField.value, noteField.value, keywordsField.value, descField.value, sitesListField.value, villesListField.value, linkedDepartementField.value, linkedVilleField.value);
+        e.preventDefault();
     });
 
 
@@ -208,21 +264,56 @@
         pageScroll();
     }
 
-    function pushIntoDatabase(type, note, keywords, desc, sites, villages){
-        var key = [];
-        if (keywords){
-            keywords = keywords.split(",");
-            console.log(keywords);
+    function pushIntoDatabase(name, note, keywords, desc, sites, villes, linkedDepartement, linkedVille){
+        if (parseInt(note) && name) {
+            if (keywords) {
+                keywords = keywords.split(" ");
+                console.log(keywords);
+            }
+            if (villes) {
+                villes = villes.split(" ");
+                console.log(villes);
+            }
+            if (sites) {
+                sites = sites.split(" ");
+                console.log(sites);
+            }
+            if (isSite == true) {
+                socket.emit('datasToPush', {
+                    type: "Site",
+                    name: name.toString(),
+                    note: parseInt(note),
+                    keywords: keywords,
+                    linkedVilles: linkedVille,
+                    desc: desc.toString()
+                })
+            }
+            if (isVille == true) {
+                socket.emit('datasToPush', {
+                    type: "Ville",
+                    name: name.toString(),
+                    note: parseInt(note),
+                    keywords: keywords,
+                    departement: linkedDepartement,
+                    desc: desc.toString()
+                })
+            }
+            if (isDepartement == true) {
+                socket.emit('datasToPush', {
+                    type: "Departement",
+                    name: name.toString(),
+                    note: parseInt(note),
+                    keywords: keywords,
+                    villes: villes,
+                    desc: desc.toString()
+                })
+            }
+            console.log("done");
         }
-
-        socket.emit('datasToPush', {
-            type:type,
-            note: parseInt(note),
-            keywords:keywords,
-            desc: desc,
-            sites: "lalal"
-        })
+        else
+            postToChat("Erreur dans les données renseignées, annulation de l'envoi en base de données")
     }
+
 
 
 </script>
