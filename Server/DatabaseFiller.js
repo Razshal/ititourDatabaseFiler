@@ -2,7 +2,8 @@ var http = require('http');
 var fs = require('fs');
 
 var mongo = require('mongodb').MongoClient;
-var serverAddress = "mongodb://192.168.0.37:27017/ititourContent";
+var serverAddress = "mongodb://192.168.0.37:27017/Ititour";
+
 
 mongo.connect(serverAddress, function (err, db) {
     if (err)
@@ -33,7 +34,9 @@ mongo.connect(serverAddress, function (err, db) {
             }
         );
         socket.on('datasToPush', function (data) {
+
             if(data.type == "Departement"){
+                console.log('revieved data');
                 db.collection('ititourContent', function(err, col){
                    col.insert({
                        type: data.type,
@@ -43,6 +46,7 @@ mongo.connect(serverAddress, function (err, db) {
                        villes: data.villes,
                        desc: data.desc
                    });
+                    console.log(err);
                 });
             }
             else if(data.type == "Ville"){

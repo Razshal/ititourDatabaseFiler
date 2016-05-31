@@ -7,7 +7,6 @@
     <style>
         html{
             font-family: Arial Black,Arial Bold,Gadget,sans-serif;
-
         }
         #chat{
             height: 60vh;
@@ -17,6 +16,9 @@
             padding-top: 1vh;
             margin-bottom: 20px;
             border-radius : 10px;
+        }
+        .post{
+            margin-left: 10px;
         }
         table, th, td {
             border: 1px solid black;
@@ -278,7 +280,7 @@
                 sites = sites.split(" ");
                 console.log(sites);
             }
-            if (isSite == true) {
+            if (isSite.checked == true) {
                 socket.emit('datasToPush', {
                     type: "Site",
                     name: name.toString(),
@@ -287,8 +289,9 @@
                     linkedVilles: linkedVille,
                     desc: desc.toString()
                 })
+                console.log("done site");
             }
-            if (isVille == true) {
+            if (isVille.checked == true) {
                 socket.emit('datasToPush', {
                     type: "Ville",
                     name: name.toString(),
@@ -297,8 +300,9 @@
                     departement: linkedDepartement,
                     desc: desc.toString()
                 })
+                console.log("done ville");
             }
-            if (isDepartement == true) {
+            if (isDepartement.checked == true) {
                 socket.emit('datasToPush', {
                     type: "Departement",
                     name: name.toString(),
@@ -307,8 +311,9 @@
                     villes: villes,
                     desc: desc.toString()
                 })
+                console.log("done departement");
             }
-            console.log("done");
+
         }
         else
             postToChat("Erreur dans les données renseignées, annulation de l'envoi en base de données")
