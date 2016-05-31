@@ -33,16 +33,36 @@
             background-color: #e8eef0;
             color: black;
         }
-        #name,#note,#keywords,#villagesList,#sitesList,#desc{
+        #name,#note,#keywords,#villagesList,#sitesList,#desc,#send,#advices{
             display: none;
         }
+        #send:hover, #advicesButton:hover {
+            background-color: white;
+            color: black;
+            border: 2px solid #555555;
+        }
+
+        #send, #advicesButton {
+            background-color: #555555;
+            color: white;
+            margin: 10px;
+        }
+        #advices{
+            background-color: #b9b5b4;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
     </style>
 </head>
     <body>
-        <h2>Avant d'utiliser cet outil consultez la notice en bas de page</h2>
+        <h1>Ititour Database Filler</h1>
+        <h2>V 0.2.0</h2>
         <form id="dataType">
             <table>
-                <p>Précisez le type de donnée à rentrer</p>
+                <p>Précisez le type de donnée à rentrer<br>
+                Il faut décocher la case actuelle si vous voullez en choisir une autre</p>
                 <tr>
                     <th>Département</th>
                     <th>Ville/Village</th>
@@ -55,27 +75,33 @@
                 </tr>
             </table>
         </form>
-            <input type="text" placeholder="Le nom du dep/village/site" id="name">
+        <form>
+            <p id="fieldDesc"></p>
+            <input type="text" placeholder="Le nom du departement/village/site" id="name">
             <input type="number" placeholder="Note de 0 à 5" id="note">
             <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par un espace)" id="keywords">
             <input type="text" placeholder="Liste des villes et villages du département séparés par un espace et rien d'autre" id="villagesList">
             <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par un espace et rien d'autre" id="sitesList">
             <input type="text" placeholder="Description de l'élément" id="desc">
+            <button id="send">Envoyer directement dans la base de données</button>
         </form>
 
+        <button id="advicesButton">Afficher la notice d'utilisation</button>
+        <div id="advices">
+            <h3>Bienvenue sur l'outil de remplissage de la base de données d'Ititour</h3>
+            <p>La grande partie grise vous montre les dernières données qui ont été rentrées<br>
+                Quand vous souhaitez ajouter des données il est préférable de le faire dans cet ordre :<br>
+                Créer le département (si ce n'est pas déjà fait)<br>
+                Créer le village/ville<br>
+                Créer les sites touristiques<br>
+
+                Si vous voullez entrer un village utilisez le mot ville (la base de données se moque
+                de la subtile différence entre une ville et un village)<br>
+                Un site peut être une cathédrale, un pont, un panorama, etc un point d'interrêt que vous souhaitez traiter
+            </p>
+        </div>
+
         <div id="chat"></div>
-        <h3>Bienvenue sur l'outil de remplissage de la base de données d'Ititour</h3>
-        <p>La grande partie grise vous montre les dernières données qui ont été rentrées<br>
-        Quand vous souhaitez ajouter des données il est préférable de le faire dans cet ordre :<br>
-            Créer le département (si ce n'est pas déjà fait)<br>
-            Créer le village/ville<br>
-            Créer les sites touristiques<br>
-
-        Si vous voullez entrer un village utilisez le mot ville (la base de données se moque
-            de la subtile différence entre une ville et un village)<br>
-        Un site peut être une cathédrale, un pont, un panorama, etc un point d'interrêt que vous souhaitez traiter
-        </p>
-
     </body>
 </html>
 
@@ -101,6 +127,10 @@
     var villageListField = document.getElementById('villagesList');
     var sitesListField = document.getElementById('sitesList');
     var descField = document.getElementById('desc');
+    var fieldDesc = document.getElementById('fieldDesc');
+    var send = document.getElementById('send');
+    var advicesButton = document.getElementById('advicesButton');
+    var advices = document.getElementById('advices');
 
     dataTypeCheckboxes.addEventListener('click', function () {
         console.log('la bool est ' + isDepartement.checked);
@@ -111,6 +141,10 @@
             villageListField.style.display = "inline";
             keywordsField.style.display = "none";
             sitesListField.style.display = "none";
+            send.style.display = "inline";
+            fieldDesc.innerHTML = "Département";
+            isVille.checked = false;
+            isSite.checked = false;
         }
         else if (isVille.checked == true){
             nameField.style.display = "inline";
@@ -119,6 +153,10 @@
             villageListField.style.display = "none";
             keywordsField.style.display = "inline";
             sitesListField.style.display = "inline";
+            send.style.display = "inline";
+            fieldDesc.innerHTML = "Ville / Village";
+            isSite.checked = false;
+            isDepartement.checked = false;
         }
         else if (isSite.checked == true){
             nameField.style.display = "inline";
@@ -127,10 +165,33 @@
             villageListField.style.display = "none";
             keywordsField.style.display = "none";
             sitesListField.style.display = "none";
+            send.style.display = "inline";
+            fieldDesc.innerHTML = "Site tourstique";
+            isVille.checked = false;
+            isDepartement.checked = false;
         }
-
+        else {
+            nameField.style.display = "none";
+            noteField.style.display = "none";
+            descField.style.display = "none";
+            villageListField.style.display = "none";
+            keywordsField.style.display = "none";
+            sitesListField.style.display = "none";
+            send.style.display = "none";
+            fieldDesc.innerHTML = "";
+        }
     });
 
+    var isAdviceDisplayed = false;
+
+    advicesButton.addEventListener('click', function () {
+        isAdviceDisplayed = !isAdviceDisplayed;
+        if (isAdviceDisplayed == true){
+            advices.style.display = "inline-block";
+        }
+        else
+            advices.style.display = "none";
+    });
 
 
     function pageScroll() {
