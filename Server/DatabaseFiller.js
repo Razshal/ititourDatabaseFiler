@@ -4,6 +4,8 @@ var fs = require('fs');
 var mongo = require('mongodb').MongoClient;
 var serverAddress = "mongodb://192.168.0.37:27017/Ititour";
 
+var basicPassword = "laboheme55";
+
 
 mongo.connect(serverAddress, function (err, db) {
     if (err)
@@ -34,44 +36,47 @@ mongo.connect(serverAddress, function (err, db) {
             }
         );
         socket.on('datasToPush', function (data) {
-
-            if(data.type == "Departement"){
-                console.log('revieved data');
-                db.collection('ititourContent', function(err, col){
-                   col.insert({
-                       type: data.type,
-                       name: data.name,
-                       note: data.note,
-                       keywords: data.keywords,
-                       villes: data.villes,
-                       desc: data.desc
-                   });
-                    console.log(err);
-                });
-            }
-            else if(data.type == "Ville"){
-                db.collection('ititourContent', function(err, col) {
-                    col.insert({
-                        type: data.type,
-                        name: data.name,
-                        note: data.note,
-                        keywords: data.keywords,
-                        departement: data.departement,
-                        desc: data.desc
+            if (data.password == "laboheme55") {
+                
+                if (data.type == "Departement") {
+                    console.log('revieved data');
+                    db.collection('ititourContent', function (err, col) {
+                        col.insert({
+                            type: data.type,
+                            name: data.name,
+                            note: data.note,
+                            keywords: data.keywords,
+                            villes: data.villes,
+                            desc: data.desc
+                        });
                     });
-                });
-            }
-            else if(data.type == "Site"){
-                db.collection('ititourContent', function(err, col) {
-                    col.insert({
-                        type: data.type,
-                        name: data.name,
-                        note: data.note,
-                        keywords: data.keywords,
-                        linkedVilles: data.linkedVilles,
-                        desc: data.desc
+                }
+                else if (data.type == "Ville") {
+                    db.collection('ititourContent', function (err, col) {
+                        col.insert({
+                            type: data.type,
+                            name: data.name,
+                            note: data.note,
+                            keywords: data.keywords,
+                            departement: data.departement,
+                            sites: data.sites,
+                            desc: data.desc
+                        });
                     });
-                });
+                }
+                else if (data.type == "Site") {
+                    db.collection('ititourContent', function (err, col) {
+                        col.insert({
+                            type: data.type,
+                            name: data.name,
+                            note: data.note,
+                            keywords: data.keywords,
+                            linkedVilles: data.linkedVilles,
+                            desc: data.desc
+                        });
+                    });
+                }
+                
             }
         });
     });

@@ -95,15 +95,19 @@
             display: inline;
             position: inherit;
         }
+        button{
+            min-height: 30px;
+            border: none;
+        }
 
     </style>
 </head>
     <body>
         <h1>Ititour Database Filler</h1>
-        <h2>v0.2.0</h2>
+        <h2>Test v0.2.0</h2>
+        <input type="password" id="password" placeholder="Mot de passe d'accès au serveur">
         <form id="dataType">
-            <table>
-                <p>Je veux ajouter :</p>
+            <table>Je veux ajouter un :
                 <tr>
                     <th>Département</th>
                     <th>Ville/Village</th>
@@ -124,7 +128,7 @@
             <input type="number" placeholder="Note de 0 à 5" id="note">
             <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par un espace)" id="keywords">
             <input type="text" placeholder="Liste des villes et villages du département séparés par un espace et rien d'autre" id="villagesList">
-            <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par un espace et rien d'autre" id="sitesList">
+            <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par une virgule et rien d'autre (pas d'espace entre les sites !)" id="sitesList">
             <textarea id="desc" placeholder="Description de l'élément"></textarea>
             <button id="send">Envoyer directement dans la base de données</button>
         </form>
@@ -156,81 +160,73 @@
 
     socket.on('lastDatas', function (data) {
         console.log('socket.on lastDatas : ' + data.datas);
-        for(arrays in data.datas) {
-            postToChat(data.datas);
+        for(thing in data.datas) {
+            for (subArray in data.datas[thing])
+            postToChat(data.datas[thing][subArray]);
         }
     });
+    var form = {descField: document.getElementById('desc'),
+                nameField: document.getElementById('name'),
+                linkedDepartementField: document.getElementById('linkedDepartement'),
+                linkedVilleField: document.getElementById('linkedVille'),
+                noteField : document.getElementById('note'),
+                keywordsField : document.getElementById('keywords'),
+                villesListField : document.getElementById('villagesList'),
+                sitesListField : document.getElementById('sitesList'),
+                send : document.getElementById('send')
+    };
+    var fieldDesc = document.getElementById('fieldDesc');
+    var passwordField = document.getElementById('password');
     var dataTypeCheckboxes = document.getElementById('dataType');
     var isDepartement = document.getElementById('isDepartement');
     var isVille = document.getElementById('isVille');
     var isSite = document.getElementById('isSite');
-    var nameField = document.getElementById('name');
-    var linkedDepartementField = document.getElementById('linkedDepartement');
-    var linkedVilleField = document.getElementById('linkedVille');
-    var noteField = document.getElementById('note');
-    var keywordsField = document.getElementById('keywords');
-    var villesListField = document.getElementById('villagesList');
-    var sitesListField = document.getElementById('sitesList');
-    var descField = document.getElementById('desc');
-    var fieldDesc = document.getElementById('fieldDesc');
-    var send = document.getElementById('send');
     var advicesButton = document.getElementById('advicesButton');
     var advices = document.getElementById('advices');
 
     dataTypeCheckboxes.addEventListener('click', function () {
-        console.log('la bool est ' + isDepartement.checked);
-        if (isDepartement.checked == true){
-            nameField.style.display = "inline";
-            noteField.style.display = "inline";
-            descField.style.display = "inline";
-            villesListField.style.display = "inline";
-            keywordsField.style.display = "none";
-            sitesListField.style.display = "none";
-            linkedDepartementField.style.display = "none";
-            linkedVilleField.style.display = "none";
-            send.style.display = "inline";
+        if (isDepartement.checked || isVille.checked || isSite.checked){
+            form.nameField.style.display = "inline";
+            form.noteField.style.display = "inline";
+            form.descField.style.display = "inline";
+        }
+        if (isDepartement.checked){
+            form.villesListField.style.display = "inline";
+            form.keywordsField.style.display = "none";
+            form.sitesListField.style.display = "none";
+            form.linkedDepartementField.style.display = "none";
+            form.linkedVilleField.style.display = "none";
+            form.send.style.display = "inline";
             fieldDesc.innerHTML = "Département";
             isVille.checked = false;
             isSite.checked = false;
         }
-        else if (isVille.checked == true){
-            nameField.style.display = "inline";
-            noteField.style.display = "inline";
-            descField.style.display = "inline";
-            linkedDepartementField.style.display = "inline";
-            linkedVilleField.style.display = "none";
-            villesListField.style.display = "none";
-            keywordsField.style.display = "inline";
-            sitesListField.style.display = "inline";
-            send.style.display = "inline";
+        else if (isVille.checked){
+            form.linkedDepartementField.style.display = "inline";
+            form.linkedVilleField.style.display = "none";
+            form.villesListField.style.display = "none";
+            form.keywordsField.style.display = "inline";
+            form.sitesListField.style.display = "inline";
+            form.send.style.display = "inline";
             fieldDesc.innerHTML = "Ville / Village";
             isSite.checked = false;
             isDepartement.checked = false;
         }
-        else if (isSite.checked == true){
-            nameField.style.display = "inline";
-            noteField.style.display = "inline";
-            descField.style.display = "inline";
-            villesListField.style.display = "none";
-            keywordsField.style.display = "inline";
-            sitesListField.style.display = "none";
-            linkedDepartementField.style.display = "none";
-            linkedVilleField.style.display = "inline";
-            send.style.display = "inline";
+        else if (isSite.checked){
+            form.villesListField.style.display = "none";
+            form.keywordsField.style.display = "inline";
+            form.sitesListField.style.display = "none";
+            form.linkedDepartementField.style.display = "none";
+            form.linkedVilleField.style.display = "inline";
+            form.send.style.display = "inline";
             fieldDesc.innerHTML = "Site tourstique";
             isVille.checked = false;
             isDepartement.checked = false;
         }
         else {
-            nameField.style.display = "none";
-            noteField.style.display = "none";
-            descField.style.display = "none";
-            villesListField.style.display = "none";
-            keywordsField.style.display = "none";
-            sitesListField.style.display = "none";
-            linkedDepartementField.style.display = "none";
-            linkedVilleField.style.display = "none";
-            send.style.display = "none";
+            for(index in form) {
+                form[index].style.display = "none";
+            }
             fieldDesc.innerHTML = "";
         }
     });
@@ -246,22 +242,20 @@
         else
             advices.style.display = "none";
     });
-    send.addEventListener('click', function(e){
-       pushIntoDatabase(nameField.value, noteField.value, keywordsField.value, descField.value, sitesListField.value, villesListField.value, linkedDepartementField.value, linkedVilleField.value);
+    form.send.addEventListener('click', function(e){
+       pushIntoDatabase(form.nameField.value, form.noteField.value, form.keywordsField.value,
+               form.descField.value, form.sitesListField.value, form.villesListField.value,
+               form.linkedDepartementField.value, form.linkedVilleField.value);
         e.preventDefault();
     });
-
 
     function pageScroll() {
         chat.scrollTop = chat.scrollHeight;
     }
-
     function postToChat(data){
         var parag = document.createElement("p");
         parag.classList.add('post');
-
-            parag.appendChild(document.createTextNode(data));
-
+        parag.appendChild(document.createTextNode(data));
         chat.appendChild(parag);
         pageScroll();
     }
@@ -277,46 +271,50 @@
                 console.log(villes);
             }
             if (sites) {
-                sites = sites.split(" ");
+                sites = sites.split(",");
                 console.log(sites);
             }
             if (isSite.checked == true) {
                 socket.emit('datasToPush', {
+                    password: passwordField.value.toString(),
                     type: "Site",
                     name: name.toString(),
                     note: parseInt(note),
                     keywords: keywords,
                     linkedVilles: linkedVille,
                     desc: desc.toString()
-                })
-                console.log("done site");
+                });
+                postToChat("done site");
             }
             if (isVille.checked == true) {
                 socket.emit('datasToPush', {
+                    password: passwordField.value.toString(),
                     type: "Ville",
                     name: name.toString(),
                     note: parseInt(note),
                     keywords: keywords,
                     departement: linkedDepartement,
+                    sites: sites,
                     desc: desc.toString()
-                })
-                console.log("done ville");
+                });
+                postToChat("done ville");
             }
             if (isDepartement.checked == true) {
                 socket.emit('datasToPush', {
+                    password: passwordField.value.toString(),
                     type: "Departement",
                     name: name.toString(),
                     note: parseInt(note),
                     keywords: keywords,
                     villes: villes,
                     desc: desc.toString()
-                })
-                console.log("done departement");
+                });
+                postToChat("done departement");
             }
 
         }
         else
-            postToChat("Erreur dans les données renseignées, annulation de l'envoi en base de données")
+            postToChat("Erreur dans les données renseignées ou le mot de passe, annulation de l'envoi en base de données")
     }
 
 
