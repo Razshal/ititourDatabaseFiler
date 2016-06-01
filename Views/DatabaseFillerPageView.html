@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Remplisseur de base de données</title>
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script   src="https://code.jquery.com/jquery-2.2.4.js"
+              integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+              crossorigin="anonymous"></script>
     <style>
         html{
             font-family: Arial Black,Arial Bold,Gadget,sans-serif;
@@ -104,7 +107,7 @@
 </head>
     <body>
         <h1>Ititour Database Filler</h1>
-        <h2>Test v0.2.0</h2>
+        <h2>Test v0.3.0</h2>
         <input type="password" id="password" placeholder="Mot de passe d'accès au serveur">
         <form id="dataType">
             <table>Je veux ajouter un :
@@ -127,8 +130,8 @@
             <input type="text" placeholder="Le nom de la ville où se situe ce site touristique" id="linkedVille">
             <input type="number" placeholder="Note de 0 à 5" id="note">
             <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par un espace)" id="keywords">
-            <input type="text" placeholder="Liste des villes et villages du département séparés par un espace et rien d'autre" id="villagesList">
-            <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par une virgule et rien d'autre (pas d'espace entre les sites !)" id="sitesList">
+            <input type="text" placeholder="Liste des villes et villages du département séparés par un espace" id="villagesList">
+            <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par une virgule" id="sitesList">
             <textarea id="desc" placeholder="Description de l'élément"></textarea>
             <button id="send">Envoyer directement dans la base de données</button>
         </form>
@@ -154,6 +157,9 @@
 
 
 <script>
+    String.prototype.capitalizeFirstLetter = function() {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    };
     var chat = document.getElementById('chat');
     var server = ('192.168.0.32:8080');
     var socket = io.connect(server);
@@ -260,19 +266,55 @@
         pageScroll();
     }
 
-    function pushIntoDatabase(name, note, keywords, desc, sites, villes, linkedDepartement, linkedVille){
+    function postDatasIntoChat(data){
+        var parag = document.createElement("ul");
+        parag.classList.add('datasFromDatabase');
+
+        if (data.type == "Departement")
+        {
+            for (datasFromDb in data.datas) {
+                var datasIntoChat = document.createElement("li");
+                datasIntoChat.appendChild(document.createTextNode(data.datas[datasFromDb]));
+                parag.appendChild(datasIntoChat);
+            }
+        }
+        parag.appendChild(document.createTextNode(data));
+        chat.appendChild(parag);
+        pageScroll();
+    }
+
+    function fieldDataCorrectAfterSplit(dataFromField){
+        dataFromField = $.trim(dataFromField);
+        for (thing in dataFromField){
+            dataFromField[thing] = $.trim(dataFromField[thing]);
+            dataFromField[thing] = dataFromField[thing].capitalizeFirstLetter();
+        }
+        return dataFromField;
+    }
+
+    function pushIntoDatabase(name, note, keywords, desc, sites,
+                              villes, linkedDepartement, linkedVille){
         if (parseInt(note) && name) {
             if (keywords) {
+                keywords = $.trim(keywords);
                 keywords = keywords.split(" ");
                 console.log(keywords);
             }
             if (villes) {
                 villes = villes.split(" ");
+                for (ville in villes){
+                    villes[ville] = $.trim(villes);
+                    villes[ville] = villes[ville].capitalizeFirstLetter();
+                }
                 console.log(villes);
             }
             if (sites) {
                 sites = sites.split(",");
                 console.log(sites);
+                for(site in sites){
+                    sites[site] = $.trim(sites[site]);
+                    sites[site] = sites[site].capitalizeFirstLetter();
+                }
             }
             if (isSite.checked == true) {
                 socket.emit('datasToPush', {

@@ -6,7 +6,6 @@ var serverAddress = "mongodb://192.168.0.37:27017/Ititour";
 
 var basicPassword = "laboheme55";
 
-
 mongo.connect(serverAddress, function (err, db) {
     if (err)
         console.log("Impossible de se connecter ", err);
@@ -37,7 +36,7 @@ mongo.connect(serverAddress, function (err, db) {
         );
         socket.on('datasToPush', function (data) {
             if (data.password == "laboheme55") {
-                
+                var date = new Date();
                 if (data.type == "Departement") {
                     console.log('revieved data');
                     db.collection('ititourContent', function (err, col) {
@@ -47,7 +46,8 @@ mongo.connect(serverAddress, function (err, db) {
                             note: data.note,
                             keywords: data.keywords,
                             villes: data.villes,
-                            desc: data.desc
+                            desc: data.desc,
+                            date: date
                         });
                     });
                 }
