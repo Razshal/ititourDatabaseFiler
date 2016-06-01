@@ -160,6 +160,14 @@
     String.prototype.capitalizeFirstLetter = function() {
         return this.charAt(0).toUpperCase() + this.slice(1);
     };
+    Array.prototype.fieldDataCorrectAfterSplit = function(){
+        $.trim(this);
+        for (thing in this){
+            this[thing] = $.trim(this[thing]);
+            this[thing] = this[thing].capitalizeFirstLetter();
+        }
+        return this;
+    };
     var chat = document.getElementById('chat');
     var server = ('192.168.0.32:8080');
     var socket = io.connect(server);
@@ -258,6 +266,7 @@
     function pageScroll() {
         chat.scrollTop = chat.scrollHeight;
     }
+    
     function postToChat(data){
         var parag = document.createElement("p");
         parag.classList.add('post');
@@ -283,38 +292,20 @@
         pageScroll();
     }
 
-    function fieldDataCorrectAfterSplit(dataFromField){
-        dataFromField = $.trim(dataFromField);
-        for (thing in dataFromField){
-            dataFromField[thing] = $.trim(dataFromField[thing]);
-            dataFromField[thing] = dataFromField[thing].capitalizeFirstLetter();
-        }
-        return dataFromField;
-    }
-
     function pushIntoDatabase(name, note, keywords, desc, sites,
                               villes, linkedDepartement, linkedVille){
         if (parseInt(note) && name) {
             if (keywords) {
-                keywords = $.trim(keywords);
                 keywords = keywords.split(" ");
-                console.log(keywords);
+                keywords.fieldDataCorrectAfterSplit();
             }
             if (villes) {
                 villes = villes.split(" ");
-                for (ville in villes){
-                    villes[ville] = $.trim(villes);
-                    villes[ville] = villes[ville].capitalizeFirstLetter();
-                }
-                console.log(villes);
+                villes.fieldDataCorrectAfterSplit();
             }
             if (sites) {
                 sites = sites.split(",");
-                console.log(sites);
-                for(site in sites){
-                    sites[site] = $.trim(sites[site]);
-                    sites[site] = sites[site].capitalizeFirstLetter();
-                }
+                sites.fieldDataCorrectAfterSplit();
             }
             if (isSite.checked == true) {
                 socket.emit('datasToPush', {
