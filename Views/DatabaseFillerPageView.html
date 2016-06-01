@@ -12,16 +12,28 @@
             font-family: Arial Black,Arial Bold,Gadget,sans-serif;
         }
         #chat{
+            font-family: Arial, Helvetica, sans-serif;
             height: 60vh;
             overflow:auto;
             background-color: darkgray;
-            font-size : 120%;
+            font-size : 100%;
             padding-top: 1vh;
             margin-bottom: 20px;
             border-radius : 10px;
         }
         .post{
             margin-left: 10px;
+        }
+        .log{
+            color: red;
+            margin-left: 5px;
+        }
+        .datasFromDatabase{
+            border: 2px solid;
+            background-color: #464646;
+            max-width: 70vw;
+            border-radius: 10px;
+            color: #cccccc;
         }
         table, th, td {
             border: 1px solid black;
@@ -30,7 +42,7 @@
             background-color: #f4f4f4;
         }
 
-        input{
+        input[type="text"], input[type="number"], input[type="password"], #desc{
             width: 100%;
             padding: 12px 20px;
             margin: 8px 0;
@@ -40,41 +52,28 @@
             color: black;
             resize:both;
         }
-        #desc{
-            width: 100%;
-            padding: 12px 20px;
-            margin: 8px 0;
-            box-sizing: border-box;
-            border: none;
-            background-color: #e8eef0;
-            color: black;
-            resize:both;
+
+        input[type="radio"]{
+            min-height: 16px;
+            min-width: 16px;
         }
-        #name,#note,#keywords,#villagesList,#sitesList,#desc,#send,#advices, #linkedDepartement, #linkedVille{
+
+        #name,#note,#keywords,#villagesList, #sitesList,
+        #desc,#send,#advices, #linkedDepartement, #linkedVille{
             display: none;
         }
 
-        #send {
+        #send, #advicesButton {
             background-color: #555555;
             color: white;
             margin: 10px;
         }
-        #send:hover {
+        #send:hover, #advicesButton:hover {
             background-color: white;
             color: black;
             border: 2px solid #555555;
         }
 
-        #advicesButton:hover {
-            background-color: white;
-            color: black;
-            border: 2px solid #555555;
-        }
-        #advicesButton {
-            background-color: #555555;
-            color: white;
-            margin: 10px;
-        }
         #advices{
             background-color: #b9b5b4;
             padding: 10px;
@@ -103,28 +102,21 @@
             border: none;
         }
 
+
     </style>
 </head>
     <body>
         <h1>Ititour Database Filler</h1>
-        <h2>Test v0.3.0</h2>
+        <h2>Test v0.3.2</h2>
         <input type="password" id="password" placeholder="Mot de passe d'accès au serveur">
-        <form id="dataType">
-            <table>Je veux ajouter un :
-                <tr>
-                    <th>Département</th>
-                    <th>Ville/Village</th>
-                    <th>Site touristique</th>
-                </tr>
-                <tr>
-                    <td><input type="checkbox" id="isDepartement"></td>
-                    <td><input type="checkbox" id="isVille"></td>
-                    <td><input type="checkbox" id="isSite"></td>
-                </tr>
-            </table>
+
+        <form id="dataType" action ="">
+            <input name ="type" type="radio" id="isDepartement" class="css-checkbox" class="dark-check-cyan">Département
+            <input name ="type" type="radio" id="isVille">Ville/Village
+            <input name ="type" type="radio" id="isSite">Site touristique
         </form>
-        <form>
-            <p id="fieldDesc"></p>
+
+        <form class="datasForm">
             <input type="text" placeholder="Le nom du departement/village/site" id="name">
             <input type="text" placeholder="Le nom du département où se situe cette ville/village" id="linkedDepartement">
             <input type="text" placeholder="Le nom de la ville où se situe ce site touristique" id="linkedVille">
@@ -141,7 +133,9 @@
             <h3>Bienvenue sur l'outil de remplissage de la base de données d'Ititour</h3>
             <ul>
                 <li>Il est impératif de ne faire aucune faute sur aucun mot et de conserver la même orthographe majuscule et tirets compris pour chaque nom que vous utiliserez</li>
-                <li>L'autre gros cadre gris en dessous vous montre les dernières données qui ont été rentrées</li>
+                <li>L'autre gros cadre gris en dessous vous montre les dernières données qui ont été rentrées, elles sont brutes,
+                telles qu'affichées dans la base de données, ne faites pas attention à leur mise en forme car le programme se permet
+                quelques libertés, vous pouvez par contre controler grace à ça les majuscules et fautes d'orthographe</li>
                 <li>La base de données va automatiquement associer les sites touristiques que vous entrerez dans
                 les villes/villages mais pour celà il est nécéssaire que vous entriez le nom des sites avec la même orthographe
                 même chose pour les villes dans la rubrique département</li>
@@ -150,16 +144,40 @@
                 <li>Il faut décocher la case actuelle si vous voullez en choisir une autre</li>
             </ul>
         </div>
-
         <div id="chat"></div>
     </body>
 </html>
 
 
 <script>
+    var form = {descField: document.getElementById('desc'),
+        nameField: document.getElementById('name'),
+        linkedDepartementField: document.getElementById('linkedDepartement'),
+        linkedVilleField: document.getElementById('linkedVille'),
+        noteField : document.getElementById('note'),
+        keywordsField : document.getElementById('keywords'),
+        villesListField : document.getElementById('villagesList'),
+        sitesListField : document.getElementById('sitesList'),
+        send : document.getElementById('send')
+    };
+    var passwordField = document.getElementById('password');
+
+    var dataTypeCheckboxes = document.getElementById('dataType');
+    var isDepartement = document.getElementById('isDepartement');
+    var isVille = document.getElementById('isVille');
+    var isSite = document.getElementById('isSite');
+
+    var advicesButton = document.getElementById('advicesButton');
+    var advices = document.getElementById('advices');
+    var chat = document.getElementById('chat');
+
+    var server = ('192.168.0.32:8080');
+    var socket = io.connect(server);
+
     String.prototype.capitalizeFirstLetter = function() {
         return this.charAt(0).toUpperCase() + this.slice(1);
     };
+
     Array.prototype.fieldDataCorrectAfterSplit = function(){
         $.trim(this);
         for (thing in this){
@@ -168,105 +186,11 @@
         }
         return this;
     };
-    var chat = document.getElementById('chat');
-    var server = ('192.168.0.32:8080');
-    var socket = io.connect(server);
-
-    socket.on('lastDatas', function (data) {
-        console.log('socket.on lastDatas : ' + data.datas);
-        for(thing in data.datas) {
-            for (subArray in data.datas[thing])
-            postToChat(data.datas[thing][subArray]);
-        }
-    });
-    var form = {descField: document.getElementById('desc'),
-                nameField: document.getElementById('name'),
-                linkedDepartementField: document.getElementById('linkedDepartement'),
-                linkedVilleField: document.getElementById('linkedVille'),
-                noteField : document.getElementById('note'),
-                keywordsField : document.getElementById('keywords'),
-                villesListField : document.getElementById('villagesList'),
-                sitesListField : document.getElementById('sitesList'),
-                send : document.getElementById('send')
-    };
-    var fieldDesc = document.getElementById('fieldDesc');
-    var passwordField = document.getElementById('password');
-    var dataTypeCheckboxes = document.getElementById('dataType');
-    var isDepartement = document.getElementById('isDepartement');
-    var isVille = document.getElementById('isVille');
-    var isSite = document.getElementById('isSite');
-    var advicesButton = document.getElementById('advicesButton');
-    var advices = document.getElementById('advices');
-
-    dataTypeCheckboxes.addEventListener('click', function () {
-        if (isDepartement.checked || isVille.checked || isSite.checked){
-            form.nameField.style.display = "inline";
-            form.noteField.style.display = "inline";
-            form.descField.style.display = "inline";
-        }
-        if (isDepartement.checked){
-            form.villesListField.style.display = "inline";
-            form.keywordsField.style.display = "none";
-            form.sitesListField.style.display = "none";
-            form.linkedDepartementField.style.display = "none";
-            form.linkedVilleField.style.display = "none";
-            form.send.style.display = "inline";
-            fieldDesc.innerHTML = "Département";
-            isVille.checked = false;
-            isSite.checked = false;
-        }
-        else if (isVille.checked){
-            form.linkedDepartementField.style.display = "inline";
-            form.linkedVilleField.style.display = "none";
-            form.villesListField.style.display = "none";
-            form.keywordsField.style.display = "inline";
-            form.sitesListField.style.display = "inline";
-            form.send.style.display = "inline";
-            fieldDesc.innerHTML = "Ville / Village";
-            isSite.checked = false;
-            isDepartement.checked = false;
-        }
-        else if (isSite.checked){
-            form.villesListField.style.display = "none";
-            form.keywordsField.style.display = "inline";
-            form.sitesListField.style.display = "none";
-            form.linkedDepartementField.style.display = "none";
-            form.linkedVilleField.style.display = "inline";
-            form.send.style.display = "inline";
-            fieldDesc.innerHTML = "Site tourstique";
-            isVille.checked = false;
-            isDepartement.checked = false;
-        }
-        else {
-            for(index in form) {
-                form[index].style.display = "none";
-            }
-            fieldDesc.innerHTML = "";
-        }
-    });
-
-    var isAdviceDisplayed = false;
-
-    advicesButton.addEventListener('click', function (e) {
-        e.preventDefault();
-        isAdviceDisplayed = !isAdviceDisplayed;
-        if (isAdviceDisplayed == true){
-            advices.style.display = "inline-block";
-        }
-        else
-            advices.style.display = "none";
-    });
-    form.send.addEventListener('click', function(e){
-       pushIntoDatabase(form.nameField.value, form.noteField.value, form.keywordsField.value,
-               form.descField.value, form.sitesListField.value, form.villesListField.value,
-               form.linkedDepartementField.value, form.linkedVilleField.value);
-        e.preventDefault();
-    });
 
     function pageScroll() {
         chat.scrollTop = chat.scrollHeight;
     }
-    
+
     function postToChat(data){
         var parag = document.createElement("p");
         parag.classList.add('post');
@@ -274,21 +198,38 @@
         chat.appendChild(parag);
         pageScroll();
     }
-
-    function postDatasIntoChat(data){
-        var parag = document.createElement("ul");
-        parag.classList.add('datasFromDatabase');
-
-        if (data.type == "Departement")
-        {
-            for (datasFromDb in data.datas) {
-                var datasIntoChat = document.createElement("li");
-                datasIntoChat.appendChild(document.createTextNode(data.datas[datasFromDb]));
-                parag.appendChild(datasIntoChat);
-            }
-        }
+    function postLogToChat(data){
+        var parag = document.createElement("p");
+        parag.classList.add('log');
         parag.appendChild(document.createTextNode(data));
         chat.appendChild(parag);
+        pageScroll();
+    }
+
+    function postDatasIntoChat(data){
+            for (dataFromDb in data.datas) {
+
+                var parag = document.createElement("ul");
+                parag.classList.add('datasFromDatabase');
+
+                if (!document.getElementById(data.datas[dataFromDb]._id))
+                    parag.id = data.datas[dataFromDb]._id;
+
+                for (subArray in data.datas[dataFromDb]) {
+                    if (subArray.toString() == "_id" || subArray.toString() == "Date"
+                            || subArray.toString() == "__proto__")
+                            continue;
+                    console.log(data.datas[dataFromDb]);
+                    var datasIntoChat = document.createElement("li");
+                    datasIntoChat.appendChild(document.createTextNode(subArray.toString() +
+                            " : " + data.datas[dataFromDb][subArray]));
+                    parag.appendChild(datasIntoChat);
+                }
+
+                parag.appendChild(document.createTextNode(data));
+                chat.appendChild(parag);
+            }
+
         pageScroll();
     }
 
@@ -317,7 +258,7 @@
                     linkedVilles: linkedVille,
                     desc: desc.toString()
                 });
-                postToChat("done site");
+                postToChat("Envoi du site");
             }
             if (isVille.checked == true) {
                 socket.emit('datasToPush', {
@@ -330,7 +271,7 @@
                     sites: sites,
                     desc: desc.toString()
                 });
-                postToChat("done ville");
+                postToChat("Envoi de la ville");
             }
             if (isDepartement.checked == true) {
                 socket.emit('datasToPush', {
@@ -342,13 +283,80 @@
                     villes: villes,
                     desc: desc.toString()
                 });
-                postToChat("done departement");
+                postToChat("Envoi du departement");
             }
 
         }
         else
             postToChat("Erreur dans les données renseignées ou le mot de passe, annulation de l'envoi en base de données")
     }
+
+// ----------------- Here starts the "loop" -----------------
+
+    socket.on('lastDatas', function (data) {
+        console.log('socket.on lastDatas : ' + data.datas);
+        postDatasIntoChat(data);
+    });
+
+    socket.on('logForApp', function(data){
+        console.log("Socket reçu");
+        postLogToChat(data.err);
+    });
+
+
+    dataTypeCheckboxes.addEventListener('click', function () {
+        if (isDepartement.checked || isVille.checked || isSite.checked){
+            form.nameField.style.display = "inline";
+            form.noteField.style.display = "inline";
+            form.descField.style.display = "inline";
+        }
+        if (isDepartement.checked){
+            form.villesListField.style.display = "inline";
+            form.keywordsField.style.display = "none";
+            form.sitesListField.style.display = "none";
+            form.linkedDepartementField.style.display = "none";
+            form.linkedVilleField.style.display = "none";
+            form.send.style.display = "inline";
+
+        }
+        else if (isVille.checked){
+            form.linkedDepartementField.style.display = "inline";
+            form.linkedVilleField.style.display = "none";
+            form.villesListField.style.display = "none";
+            form.keywordsField.style.display = "inline";
+            form.sitesListField.style.display = "inline";
+            form.send.style.display = "inline";
+
+        }
+        else if (isSite.checked){
+            form.villesListField.style.display = "none";
+            form.keywordsField.style.display = "inline";
+            form.sitesListField.style.display = "none";
+            form.linkedDepartementField.style.display = "none";
+            form.linkedVilleField.style.display = "inline";
+            form.send.style.display = "inline";
+
+        }
+    });
+
+    var isAdviceDisplayed = false;
+
+    advicesButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        isAdviceDisplayed = !isAdviceDisplayed;
+        if (isAdviceDisplayed == true){
+            advices.style.display = "inline-block";
+        }
+        else
+            advices.style.display = "none";
+    });
+    form.send.addEventListener('click', function(e){
+       pushIntoDatabase(form.nameField.value, form.noteField.value, form.keywordsField.value,
+               form.descField.value, form.sitesListField.value, form.villesListField.value,
+               form.linkedDepartementField.value, form.linkedVilleField.value);
+        e.preventDefault();
+    });
+
 
 
 

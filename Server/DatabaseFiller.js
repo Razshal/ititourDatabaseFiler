@@ -6,6 +6,12 @@ var serverAddress = "mongodb://192.168.0.37:27017/Ititour";
 
 var basicPassword = "laboheme55";
 
+function sendLastDatas(socket, items){
+    socket.emit('lastDatas', {datas: items});
+}
+
+
+
 mongo.connect(serverAddress, function (err, db) {
     if (err)
         console.log("Impossible de se connecter ", err);
@@ -27,57 +33,70 @@ mongo.connect(serverAddress, function (err, db) {
     var io = require('socket.io').listen(webServer);
 
     io.sockets.on('connection', function(socket){
+
         console.log("Connexion depuis l'adresse : " + socket.request.connection.remoteAddress);
+
         db.collection('ititourContent').find().limit(10).toArray().then(
             function (items) {
-                socket.emit('lastDatas', {datas: items});
+                sendLastDatas(socket,items);
                 return;
             }
         );
         socket.on('datasToPush', function (data) {
+
             if (data.password == "laboheme55") {
-                var date = new Date();
-                if (data.type == "Departement") {
-                    console.log('revieved data');
-                    db.collection('ititourContent', function (err, col) {
-                        col.insert({
-                            type: data.type,
-                            name: data.name,
-                            note: data.note,
-                            keywords: data.keywords,
-                            villes: data.villes,
-                            desc: data.desc,
-                            date: date
+                if (data.note > 0 && data.note <=5) {
+                    var date = new Date();
+                    if (data.type == "Departement") {
+                        console.log('revieved data');
+                        db.collection('ititourContent', function (err, col) {
+                            col.insert({
+                                type: data.type,
+                                name: data.name,
+                                note: data.note,
+                                keywords: data.keywords,
+                                villes: data.villes,
+                                desc: data.desc,
+                                date: date
+                            });
                         });
-                    });
-                }
-                else if (data.type == "Ville") {
-                    db.collection('ititourContent', function (err, col) {
-                        col.insert({
-                            type: data.type,
-                            name: data.name,
-                            note: data.note,
-                            keywords: data.keywords,
-                            departement: data.departement,
-                            sites: data.sites,
-                            desc: data.desc
+                    }
+                    else if (data.type == "Ville") {
+                        db.collection('ititourContent', function (err, col) {
+                            col.insert({
+                                type: data.type,
+                                name: data.name,
+                                note: data.note,
+                                keywords: data.keywords,
+                                departement: data.departement,
+                                sites: data.sites,
+                                desc: data.desc,
+                                date: date
+                            });
                         });
-                    });
-                }
-                else if (data.type == "Site") {
-                    db.collection('ititourContent', function (err, col) {
-                        col.insert({
-                            type: data.type,
-                            name: data.name,
-                            note: data.note,
-                            keywords: data.keywords,
-                            linkedVilles: data.linkedVilles,
-                            desc: data.desc
+                    }
+                    else if (data.type == "Site") {
+                        db.collection('ititourContent', function (err, col) {
+                            col.insert({
+                                type: data.type,
+                                name: data.name,
+                                note: data.note,
+                                keywords: data.keywords,
+                                linkedVilles: data.linkedVilles,
+                                desc: data.desc,
+                                date: date
+                            });
                         });
+                    }
+                    db.collection('ititourContent').find().limit(1).toArray().then(function(items){
+                        sendLastDatas(socket,items);
                     });
+
                 }
-                
+
             }
+            else
+                socket.emit('logForApp',{err:"Mot de passe non valide"});
         });
     });
 
