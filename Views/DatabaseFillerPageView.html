@@ -13,22 +13,25 @@
         }
         #chat{
             height: 60vh;
+            width: auto;
             overflow:auto;
             background-color: darkgray;
             font-size : 100%;
             padding-top: 1vh;
             margin-bottom: 20px;
             border-radius : 10px;
+            resize: both;
         }
 
-        .datasFromDatabase, .log, .post{
-            max-width: 85vw;
+        .datasFromDatabase, .log, .post, #advices{
+            display: inline-block;
         }
         .datasFromDatabaseType{
             list-style-type: none;
             text-decoration: none;
             text-align: center;
             font-size: 120%;
+
         }
 
         .post{
@@ -52,7 +55,7 @@
             border-radius: 10px;
             background-color: white;
             padding: 5px;
-            width: 40vw;
+            width: 20vw;
             margin-left: auto;
             margin-right: auto;
             text-align: center;
@@ -73,15 +76,15 @@
             top:0;
             right:0;
             border-top-right-radius: 10px;
-            height:34px;
-            width: 140px;
-            background-color: red;
+            height:4vh;
+            width: 50px;
+            background-color: #c90000;
             text-align: center;
-            line-height: 34px;
-            font-size: 130%;
+            line-height: 4vh;
+
         }
         .suppress:after{
-            content: 'Supprimmer';
+            content: 'X';
         }
         input[type="text"], input[type="number"], input[type="password"], #desc{
             width: 100%;
@@ -142,7 +145,8 @@
             position: inherit;
         }
         h4{
-            padding: 5px 0 5px 0;
+            height:4vh;
+            line-height: 4vh;
             margin: 0;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
@@ -280,9 +284,10 @@
                     suppressButton.addEventListener('click', function (e) {
                         var confirm = (window.confirm('Voullez vous réllement supprimer cette entrée ? Cette action est irreversible'));
                         if (confirm) {
+                            var id = (e.target.className.split(" ")[1]).toString();
                             socket.emit('askForDeletion', {
                                 password: passwordField.value,
-                                object:e.target.className.split(" ")[1]
+                                id:id
                             });
                        //     var objectId = e.target.className.split(" ")[1];
                       //      console.log(objectId);
@@ -317,7 +322,6 @@
                 if(data.datas[dataFromDb]._id != undefined)
                     chat.appendChild(div);
             }
-
         pageScroll();
     }
 
