@@ -15,11 +15,13 @@ function sendLogForClient(socket, log){
 function sendBadPassword(socket){
     socket.emit('logForApp', {err:"Mot de passe non valide"});
 }
-function dataConfirmation(socket, confirmationType){
-    socket.emit('confirmation', {hasBeenDeleted: ""});
+function modifiedDataConfirmation(socket, confirmationType, dataId){
+    socket.emit('confirmation', {
+        dataId: dataId,
+        confirmationType: confirmationType});
 }
 function passwordCheck(data){
-    if (data.password == "laboheme55")
+    if (data.password == basicPassword)
         return true;
     else
         return false;
@@ -48,10 +50,11 @@ mongo.connect(serverAddress, function (err, db) {
     var io = require('socket.io').listen(webServer);
 
     io.sockets.on('connection', function(socket){
+        var collection = db.collection('ititourContent');
 
         console.log("Connexion depuis l'adresse : " + socket.request.connection.remoteAddress);
 
-        db.collection('ititourContent').find().limit(10).toArray().then(
+        collection.find().limit(10).toArray().then(
             function (items) {
                 sendLastDatas(socket,items);
             }
@@ -117,8 +120,10 @@ mongo.connect(serverAddress, function (err, db) {
 
         socket.on('askForDeletion', function(data){
             if (passwordCheck(data) == true) {
-                
-
+                var idToDelete = data.object;
+                collection.deleteOne({"_id":idToDelete.toString()}).then(function () {
+                    modifiedDataConfirmation(socket, "deletion", idToDelete);
+                })
             }
             else
                 sendBadPassword(socket);

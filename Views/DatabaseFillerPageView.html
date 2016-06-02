@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <title>Remplisseur de base de données</title>
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-    <script   src="https://code.jquery.com/jquery-2.2.4.js"
-              integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
-              crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.js"
+            integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+            crossorigin="anonymous"></script>
     <style>
         html{
             font-family: Arial, Helvetica, sans-serif;
         }
         #chat{
-            font-family: Arial, Helvetica, sans-serif;
             height: 60vh;
             overflow:auto;
             background-color: darkgray;
@@ -61,6 +60,28 @@
         .datasFromDatabase{
             border: 2px solid;
             border-radius: 10px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-bottom: 15px;
+            list-style-type: none;
+            padding-left: 0;
+            position: relative;
+        }
+        .suppress{
+            cursor: pointer;
+            position: absolute;
+            top:0;
+            right:0;
+            border-top-right-radius: 10px;
+            height:34px;
+            width: 140px;
+            background-color: red;
+            text-align: center;
+            line-height: 34px;
+            font-size: 130%;
+        }
+        .suppress:after{
+            content: 'Supprimmer';
         }
         input[type="text"], input[type="number"], input[type="password"], #desc{
             width: 100%;
@@ -130,13 +151,6 @@
         button{
             min-height: 30px;
             border: none;
-        }
-        ul{
-            margin-left: auto;
-            margin-right: auto;
-            padding-bottom: 15px;
-            list-style-type: none;
-            padding-left: 0;
         }
         li{
             margin-left: 10px;
@@ -250,35 +264,58 @@
         *  avec le serveur
         */
             for (dataFromDb in data.datas) {
+                var div = document.createElement("div");
                 var parag = document.createElement("ul");
+                var suppressButton = document.createElement("a");
 
+                suppressButton.classList.add("suppress");
 
-                parag.classList.add('datasFromDatabase');
+                div.classList.add('datasFromDatabase');
 
-                if (!document.getElementById(data.datas[dataFromDb]._id))
-                    parag.id = data.datas[dataFromDb]._id;
+        //On vérifie que cet élément ne soit pas déjà présent sur la page avant de lui donner l'id de l'objet
+                if (!document.getElementById(data.datas[dataFromDb]._id)) {
+                    div.id = data.datas[dataFromDb]._id;
+                    suppressButton.classList.add(data.datas[dataFromDb]._id);
+
+                    suppressButton.addEventListener('click', function (e) {
+                        var confirm = (window.confirm('Voullez vous réllement supprimer cette entrée ? Cette action est irreversible'));
+                        if (confirm) {
+                            socket.emit('askForDeletion', {
+                                password: passwordField.value,
+                                object:e.target.className.split(" ")[1]
+                            });
+                       //     var objectId = e.target.className.split(" ")[1];
+                      //      console.log(objectId);
+                      //      document.getElementById(objectId.toString()).remove();
+
+                        }
+                    });
+                }
 
                 for (subArray in data.datas[dataFromDb]) {
                     if (subArray.toString() == "_id" || subArray.toString() == "date"
                             || subArray.toString() == "__proto__")
                             continue;
 
-                    console.log(data.datas[dataFromDb]);
-
                     if(subArray.toString() == "type") {
-                        var datasIntoChat = document.createElement("h4");
-                        datasIntoChat.classList.add("datasFromDatabaseType");
-                        datasIntoChat.appendChild(document.createTextNode(data.datas[dataFromDb][subArray]));
+                        var title = document.createElement("h4");
+                        title.classList.add("datasFromDatabaseType");
+                        title.appendChild(document.createTextNode(data.datas[dataFromDb][subArray]));
                     }
                     else {
                         var datasIntoChat = document.createElement("li");
                         datasIntoChat.appendChild(document.createTextNode(subArray.toString() +
                                 " : " + data.datas[dataFromDb][subArray]));
                     }
-                    parag.appendChild(datasIntoChat);
+                    if(datasIntoChat)
+                        parag.appendChild(datasIntoChat);
+
+                    div.appendChild(suppressButton);
+                    div.appendChild(title);
+                    div.appendChild(parag);
                 }
                 if(data.datas[dataFromDb]._id != undefined)
-                    chat.appendChild(parag);
+                    chat.appendChild(div);
             }
 
         pageScroll();
@@ -353,6 +390,12 @@
         postLogToChat(data.err);
     });
 
+    socket.on('confirmation', function (data) {
+        if (data.confirmationType == "deletion"){
+            document.getElementById(data.dataId.toString()).remove();
+            console.log(data.dataId);
+        }
+    });
 
     dataTypeCheckboxes.addEventListener('click', function () {
         if (isDepartement.checked || isVille.checked || isSite.checked){
