@@ -9,7 +9,21 @@ var basicPassword = "laboheme55";
 function sendLastDatas(socket, items){
     socket.emit('lastDatas', {datas: items});
 }
-
+function sendLogForClient(socket, log){
+    socket.emit('logForApp', {err:log});
+}
+function sendBadPassword(socket){
+    socket.emit('logForApp', {err:"Mot de passe non valide"});
+}
+function dataConfirmation(socket, confirmationType){
+    socket.emit('confirmation', {hasBeenDeleted: ""});
+}
+function passwordCheck(data){
+    if (data.password == "laboheme55")
+        return true;
+    else
+        return false;
+}
 
 
 mongo.connect(serverAddress, function (err, db) {
@@ -30,6 +44,7 @@ mongo.connect(serverAddress, function (err, db) {
             response.end();
         });
     }).listen(8080);
+    
     var io = require('socket.io').listen(webServer);
 
     io.sockets.on('connection', function(socket){
@@ -39,12 +54,11 @@ mongo.connect(serverAddress, function (err, db) {
         db.collection('ititourContent').find().limit(10).toArray().then(
             function (items) {
                 sendLastDatas(socket,items);
-                return;
             }
         );
         socket.on('datasToPush', function (data) {
 
-            if (data.password == "laboheme55") {
+            if (passwordCheck(data) == true) {
                 if (data.note > 0 && data.note <=5) {
                     var date = new Date();
                     if (data.type == "Departement") {
@@ -88,15 +102,26 @@ mongo.connect(serverAddress, function (err, db) {
                             });
                         });
                     }
-                    db.collection('ititourContent').find().limit(1).toArray().then(function(items){
+                    db.collection('ititourContent').find().sort({date:-1}).limit(1).toArray().then(function(items){
                         sendLastDatas(socket,items);
                     });
 
                 }
+                else
+                    sendLogForClient(socket, "Données non valides (vérifiez l'orthographe et les champs saisits)");
 
             }
             else
-                socket.emit('logForApp',{err:"Mot de passe non valide"});
+                sendBadPassword(socket);
+        });
+
+        socket.on('askForDeletion', function(data){
+            if (passwordCheck(data) == true) {
+                
+
+            }
+            else
+                sendBadPassword(socket);
         });
     });
 

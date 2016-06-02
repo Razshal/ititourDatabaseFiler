@@ -9,7 +9,7 @@
               crossorigin="anonymous"></script>
     <style>
         html{
-            font-family: Arial Black,Arial Bold,Gadget,sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
         }
         #chat{
             font-family: Arial, Helvetica, sans-serif;
@@ -21,27 +21,47 @@
             margin-bottom: 20px;
             border-radius : 10px;
         }
+
+        .datasFromDatabase, .log, .post{
+            max-width: 85vw;
+        }
+        .datasFromDatabaseType{
+            list-style-type: none;
+            text-decoration: none;
+            text-align: center;
+            font-size: 120%;
+        }
+
         .post{
             margin-left: 10px;
+            color: white;
+            background-color: coral;
+            border: 2px solid white;
+            border-radius: 10px;
+            text-align: center;
+            min-height:30px;
+            line-height: 30px;
+            width: 40vw;
+            margin-left: auto;
+            margin-right: auto;
         }
         .log{
-            color: red;
+            color: #a60000;
             margin-left: 5px;
+            font-size: 120%;
+            border : 2px solid black;
+            border-radius: 10px;
+            background-color: white;
+            padding: 5px;
+            width: 40vw;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
         }
         .datasFromDatabase{
             border: 2px solid;
-            background-color: #464646;
-            max-width: 70vw;
             border-radius: 10px;
-            color: #cccccc;
         }
-        table, th, td {
-            border: 1px solid black;
-            border-collapse: collapse;
-            text-align: center;
-            background-color: #f4f4f4;
-        }
-
         input[type="text"], input[type="number"], input[type="password"], #desc{
             width: 100%;
             padding: 12px 20px;
@@ -64,8 +84,6 @@
         }
 
         #send, #advicesButton {
-            background-color: #555555;
-            color: white;
             margin: 10px;
         }
         #send:hover, #advicesButton:hover {
@@ -74,39 +92,60 @@
             border: 2px solid #555555;
         }
 
+        #advices, h1, .datasFromDatabase, #send, #advicesButton {
+            color: #e7e7e7;
+            background-color: dimgray;
+        }
+
         #advices{
-            background-color: #b9b5b4;
             padding: 10px;
             border-radius: 10px;
             margin-bottom: 10px;
-            color: #424040;
+            background-color: #7d766b;
         }
         li{
             margin-top: 5px;
         }
         h1{
+            margin:0;
             text-align: center;
             border : 2px solid;
             border-radius: 10px;
-            width:40vw;
-            margin-right: auto;
-            margin-left: auto;
+            min-width:40vw;
             display: block;
+            background-color: dimgray;
+            padding:10px;
         }
         h2{
             display: inline;
             position: inherit;
         }
+        h4{
+            padding: 5px 0 5px 0;
+            margin: 0;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            background-color: lightslategray;
+        }
         button{
             min-height: 30px;
             border: none;
         }
-
+        ul{
+            margin-left: auto;
+            margin-right: auto;
+            padding-bottom: 15px;
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li{
+            margin-left: 10px;
+        }
 
     </style>
 </head>
     <body>
-        <h1>Ititour Database Filler</h1>
+        <h1>Ititour : Interface d'administration du contenu</h1>
         <h2>Test v0.3.2</h2>
         <input type="password" id="password" placeholder="Mot de passe d'accès au serveur">
 
@@ -121,8 +160,8 @@
             <input type="text" placeholder="Le nom du département où se situe cette ville/village" id="linkedDepartement">
             <input type="text" placeholder="Le nom de la ville où se situe ce site touristique" id="linkedVille">
             <input type="number" placeholder="Note de 0 à 5" id="note">
-            <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par un espace)" id="keywords">
-            <input type="text" placeholder="Liste des villes et villages du département séparés par un espace" id="villagesList">
+            <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par une virgule)" id="keywords">
+            <input type="text" placeholder="Liste des villes et villages du département séparés par une virgule" id="villagesList">
             <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par une virgule" id="sitesList">
             <textarea id="desc" placeholder="Description de l'élément"></textarea>
             <button id="send">Envoyer directement dans la base de données</button>
@@ -207,27 +246,39 @@
     }
 
     function postDatasIntoChat(data){
+        /* On récupère les données que le serveur nous envoie, on les filtre puis on les poste dans le "chat"
+        *  avec le serveur
+        */
             for (dataFromDb in data.datas) {
-
                 var parag = document.createElement("ul");
+
+
                 parag.classList.add('datasFromDatabase');
 
                 if (!document.getElementById(data.datas[dataFromDb]._id))
                     parag.id = data.datas[dataFromDb]._id;
 
                 for (subArray in data.datas[dataFromDb]) {
-                    if (subArray.toString() == "_id" || subArray.toString() == "Date"
+                    if (subArray.toString() == "_id" || subArray.toString() == "date"
                             || subArray.toString() == "__proto__")
                             continue;
+
                     console.log(data.datas[dataFromDb]);
-                    var datasIntoChat = document.createElement("li");
-                    datasIntoChat.appendChild(document.createTextNode(subArray.toString() +
-                            " : " + data.datas[dataFromDb][subArray]));
+
+                    if(subArray.toString() == "type") {
+                        var datasIntoChat = document.createElement("h4");
+                        datasIntoChat.classList.add("datasFromDatabaseType");
+                        datasIntoChat.appendChild(document.createTextNode(data.datas[dataFromDb][subArray]));
+                    }
+                    else {
+                        var datasIntoChat = document.createElement("li");
+                        datasIntoChat.appendChild(document.createTextNode(subArray.toString() +
+                                " : " + data.datas[dataFromDb][subArray]));
+                    }
                     parag.appendChild(datasIntoChat);
                 }
-
-                parag.appendChild(document.createTextNode(data));
-                chat.appendChild(parag);
+                if(data.datas[dataFromDb]._id != undefined)
+                    chat.appendChild(parag);
             }
 
         pageScroll();
@@ -235,13 +286,13 @@
 
     function pushIntoDatabase(name, note, keywords, desc, sites,
                               villes, linkedDepartement, linkedVille){
-        if (parseInt(note) && name) {
+        if (parseInt(note) && name && desc) {
             if (keywords) {
-                keywords = keywords.split(" ");
+                keywords = keywords.split(",");
                 keywords.fieldDataCorrectAfterSplit();
             }
             if (villes) {
-                villes = villes.split(" ");
+                villes = villes.split(",");
                 villes.fieldDataCorrectAfterSplit();
             }
             if (sites) {
@@ -288,13 +339,12 @@
 
         }
         else
-            postToChat("Erreur dans les données renseignées ou le mot de passe, annulation de l'envoi en base de données")
+            postLogToChat("Erreur dans les données renseignées ou le mot de passe, annulation de l'envoi en base de données")
     }
 
 // ----------------- Here starts the "loop" -----------------
 
     socket.on('lastDatas', function (data) {
-        console.log('socket.on lastDatas : ' + data.datas);
         postDatasIntoChat(data);
     });
 
