@@ -50,11 +50,11 @@ mongo.connect(serverAddress, function (err, db) {
     var io = require('socket.io').listen(webServer);
 
     io.sockets.on('connection', function(socket){
-        var collection = db.collection('ititourContent');
+        var doc = db.collection('ititourContent');
 
         console.log("Connexion depuis l'adresse : " + socket.request.connection.remoteAddress);
 
-        collection.find().limit(10).toArray().then(
+        doc.find().sort({"date":-1}).limit(20).toArray().then(
             function (items) {
                 sendLastDatas(socket,items);
             }
@@ -120,14 +120,25 @@ mongo.connect(serverAddress, function (err, db) {
 
         socket.on('askForDeletion', function(data){
             if (passwordCheck(data) == true) {
-                var idToDelete = data.object;
-                collection.deleteOne({"_id":idToDelete.toString()}).then(function () {
-                    modifiedDataConfirmation(socket, "deletion", idToDelete);
-                })
+                var idToDelete = data.id;
+                console.log(idToDelete);
+                var documentToDelete = doc.find({"_id":idToDelete});
+                doc.findOneAndDelete({"_id":idToDelete}, function (err, results) {
+                    console.log(results);
+
+                    if (results.result.n > 0) {
+                        modifiedDataConfirmation(socket, "deletion", idToDelete);
+                    } else {
+                        sendLogForClient(socket, "Aucune correspondance trouvée");
+                        console.log(err);
+                    }
+                });
             }
             else
                 sendBadPassword(socket);
         });
+        if (socket.request.connection.remoteAddress == "::ffff:192.168.0.27")
+            sendLogForClient(socket,"Bonjour Valentin !");
     });
 
 });
