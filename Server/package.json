@@ -1,11 +1,12 @@
 {
   "name": "databasefiller",
-  "version": "0.0.1",
+  "version": "0.3.3",
   "description": "Used to fill Ititour's database easily",
   "main": "DatabaseFiller.js",
   "dependencies": {
     "http": "^0.0.0",
-    "mongodb": "^2.1.20"
+    "mongodb": "^2.1.20",
+    "socketio": "^1.4.6"
   },
   "devDependencies": {},
   "scripts": {

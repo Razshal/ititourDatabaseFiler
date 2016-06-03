@@ -1,9 +1,7 @@
 var http = require('http');
 var fs = require('fs');
-
 var mongo = require('mongodb').MongoClient;
 var serverAddress = "mongodb://192.168.0.37:27017/Ititour";
-
 var basicPassword = "laboheme55";
 
 function sendLastDatas(socket, items){
@@ -21,26 +19,18 @@ function modifiedDataConfirmation(socket, confirmationType, dataId){
         confirmationType: confirmationType});
 }
 function passwordCheck(data){
-    if (data.password == basicPassword)
-        return true;
-    else
-        return false;
+    return data.password == basicPassword;
 }
 
-
 mongo.connect(serverAddress, function (err, db) {
-    if (err)
-        console.log("Impossible de se connecter ", err);
-    else
-        console.log("Connection to database:  OK");
+    if (err) console.log("Impossible de se connecter ", err);
+    else console.log("Connection to database:  OK");
 
     //On crée le serveur web après avoir réussit à se connecter à la base de données
     var webServer = http.createServer(function(request,response){
         fs.readFile('../Views/DatabaseFillerPageView.html', 'utf-8', function(err, data)
         {
-            if (err)
-                console.log(err);
-
+            if (err) console.log(err);
             response.writeHead(200, {'Content-Type': 'text/html'});
             response.write(data);
             response.end();
@@ -48,7 +38,6 @@ mongo.connect(serverAddress, function (err, db) {
     }).listen(8080);
     
     var io = require('socket.io').listen(webServer);
-
     io.sockets.on('connection', function(socket){
         var doc = db.collection('ititourContent');
 
@@ -60,8 +49,7 @@ mongo.connect(serverAddress, function (err, db) {
             }
         );
         socket.on('datasToPush', function (data) {
-
-            if (passwordCheck(data) == true) {
+            if (passwordCheck(data)) {
                 if (data.note > 0 && data.note <=5) {
                     var date = new Date();
                     if (data.type == "Departement") {
@@ -114,18 +102,16 @@ mongo.connect(serverAddress, function (err, db) {
                     sendLogForClient(socket, "Données non valides (vérifiez l'orthographe et les champs saisits)");
 
             }
-            else
-                sendBadPassword(socket);
+            else sendBadPassword(socket);
         });
 
         socket.on('askForDeletion', function(data){
-            if (passwordCheck(data) == true) {
+            if (passwordCheck(data)) {
                 var idToDelete = data.id;
                 console.log(idToDelete);
-                var documentToDelete = doc.find({"_id":idToDelete});
+
                 doc.findOneAndDelete({"_id":idToDelete}, function (err, results) {
                     console.log(results);
-
                     if (results.result.n > 0) {
                         modifiedDataConfirmation(socket, "deletion", idToDelete);
                     } else {
@@ -134,11 +120,17 @@ mongo.connect(serverAddress, function (err, db) {
                     }
                 });
             }
-            else
-                sendBadPassword(socket);
+            else sendBadPassword(socket);
         });
-        if (socket.request.connection.remoteAddress == "::ffff:192.168.0.27")
-            sendLogForClient(socket,"Bonjour Valentin !");
-    });
 
+        if (socket.request.connection.remoteAddress == "::ffff:192.168.0.27")
+            setTimeout(function () {
+                sendLogForClient(socket,"Bonjour Valentin !");
+            }, 2000);
+
+        if (socket.request.connection.remoteAddress == "::ffff:192.168.0.32")
+            setTimeout(function () {
+                sendLogForClient(socket,"Bonjour Mathieu !");
+            }, 2000);
+    });
 });
