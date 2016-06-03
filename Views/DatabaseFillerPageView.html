@@ -12,26 +12,30 @@
             font-family: Arial, Helvetica, sans-serif;
         }
         #chat{
+            
             height: 60vh;
             width: auto;
             overflow:auto;
             background-color: darkgray;
             font-size : 100%;
-            padding-top: 1vh;
             margin-bottom: 20px;
             border-radius : 10px;
             resize: both;
         }
 
         .datasFromDatabase, .log, .post, #advices{
-            display: inline-block;
+            display: inline-flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            align-content: stretch;
+            align-items: flex-start;
         }
         .datasFromDatabaseType{
             list-style-type: none;
             text-decoration: none;
             text-align: center;
             font-size: 120%;
-
         }
 
         .post{
@@ -54,8 +58,6 @@
             border-radius: 10px;
             background-color: white;
             padding: 5px;
-            width: 10vw;
-            height: 8vh;
             line-height: 8vh;
             margin-left: auto;
             margin-right: auto;
@@ -82,7 +84,7 @@
             background-color: #c90000;
             text-align: center;
             line-height: 4vh;
-
+            z-index: +5;
         }
         .suppress:after{
             content: 'X';
@@ -146,9 +148,12 @@
             position: inherit;
         }
         h4{
+            z-index: 0;
             height:4vh;
             line-height: 4vh;
             margin: 0;
+            position: absolute;
+            width: 100%;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
             background-color: lightslategray;
@@ -341,7 +346,7 @@
                 sites = sites.split(",");
                 sites.fieldDataCorrectAfterSplit();
             }
-            if (isSite.checked == true) {
+            if (isSite.checked) {
                 socket.emit('datasToPush', {
                     password: passwordField.value.toString(),
                     type: "Site",
@@ -353,7 +358,7 @@
                 });
                 postToChat("Envoi du site");
             }
-            if (isVille.checked == true) {
+            if (isVille.checked) {
                 socket.emit('datasToPush', {
                     password: passwordField.value.toString(),
                     type: "Ville",
@@ -366,7 +371,7 @@
                 });
                 postToChat("Envoi de la ville");
             }
-            if (isDepartement.checked == true) {
+            if (isDepartement.checked) {
                 socket.emit('datasToPush', {
                     password: passwordField.value.toString(),
                     type: "Departement",
