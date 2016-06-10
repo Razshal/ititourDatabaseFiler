@@ -8,11 +8,16 @@
             integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
             crossorigin="anonymous"></script>
     <style>
+        body{
+            margin:0;
+            width:100%;
+        }
         html{
             font-family: Arial, Helvetica, sans-serif;
+            margin:0;
+            width:100%;
         }
         #chat{
-            
             height: 60vh;
             width: auto;
             overflow:auto;
@@ -136,12 +141,10 @@
         h1{
             margin:0;
             text-align: center;
-            border : 2px solid;
-            border-radius: 10px;
-            min-width:40vw;
+            width:100%;
             display: block;
             background-color: dimgray;
-            padding:10px;
+            padding: 10px 0 10px 0;
         }
         h2{
             display: inline;
@@ -161,6 +164,9 @@
         button{
             min-height: 30px;
             border: none;
+        }
+        ul{
+            margin-top: 40px;
         }
         li{
             margin-left: 10px;
@@ -268,21 +274,32 @@
         chat.appendChild(parag);
         pageScroll();
     }
+    function convertToArrayAndCorrectData(something) {
+        if (something) {
+            var something = something;
+            something = something.split(",");
+            something.fieldDataCorrectAfterSplit();
+            return something;
+        }
+    }
+
 
     function postDatasIntoChat(data){
         /* On récupère les données que le serveur nous envoie, on les filtre puis on les poste dans le "chat"
         *  avec le serveur
         */
+        console.log("Datas : " + data.datas.type);
             for (dataFromDb in data.datas) {
                 var div = document.createElement("div");
                 var parag = document.createElement("ul");
                 var suppressButton = document.createElement("a");
+                var title = document.createElement("h4");
 
                 suppressButton.classList.add("suppress");
-
                 div.classList.add('datasFromDatabase');
+                title.classList.add("datasFromDatabaseType");
 
-        //On vérifie que cet élément ne soit pas déjà présent sur la page avant de lui donner l'id de l'objet
+                //On vérifie que cet élément ne soit pas déjà présent sur la page avant de lui donner l'id de l'objet
                 if (!document.getElementById(data.datas[dataFromDb]._id)) {
                     div.id = data.datas[dataFromDb]._id;
                     suppressButton.classList.add(data.datas[dataFromDb]._id);
@@ -295,34 +312,27 @@
                                 password: passwordField.value,
                                 id:id
                             });
-                       //     var objectId = e.target.className.split(" ")[1];
-                      //      console.log(objectId);
-                      //      document.getElementById(objectId.toString()).remove();
-
                         }
                     });
                 }
+                for (var subArray in data.datas[dataFromDb]) {
 
-                for (subArray in data.datas[dataFromDb]) {
                     if (subArray.toString() == "_id" || subArray.toString() == "date"
-                            || subArray.toString() == "__proto__")
+                            || subArray.toString() == "__proto__" || data.datas[dataFromDb][subArray] == undefined)
                             continue;
 
                     if(subArray.toString() == "type") {
-                        var title = document.createElement("h4");
-                        title.classList.add("datasFromDatabaseType");
                         title.appendChild(document.createTextNode(data.datas[dataFromDb][subArray]));
+
                     }
                     else {
                         var datasIntoChat = document.createElement("li");
-                        datasIntoChat.appendChild(document.createTextNode(subArray.toString() +
-                                " : " + data.datas[dataFromDb][subArray]));
+                        datasIntoChat.appendChild(document.createTextNode(`${subArray.toString()} : ${data.datas[dataFromDb][subArray]}`));
                     }
-                    if(datasIntoChat)
-                        parag.appendChild(datasIntoChat);
+                    if(datasIntoChat) parag.appendChild(datasIntoChat);
 
-                    div.appendChild(suppressButton);
                     div.appendChild(title);
+                    div.appendChild(suppressButton);
                     div.appendChild(parag);
                 }
                 if(data.datas[dataFromDb]._id != undefined)
@@ -332,58 +342,40 @@
     }
 
     function pushIntoDatabase(name, note, keywords, desc, sites,
-                              villes, linkedDepartement, linkedVille){
+                              villes, departement, linkedVille){
         if (parseInt(note) && name && desc) {
-            if (keywords) {
-                keywords = keywords.split(",");
-                keywords.fieldDataCorrectAfterSplit();
-            }
-            if (villes) {
-                villes = villes.split(",");
-                villes.fieldDataCorrectAfterSplit();
-            }
-            if (sites) {
-                sites = sites.split(",");
-                sites.fieldDataCorrectAfterSplit();
-            }
+            var note = parseInt(note);
+
+            keywords = convertToArrayAndCorrectData(keywords);
+            villes = convertToArrayAndCorrectData(villes);
+            sites = convertToArrayAndCorrectData(sites);
+            var type = isDepartement.checked ? "Departement" : isVille.checked ? "Ville" : isSite.checked ? "Site" : undefined;
+            var password = passwordField.value.toString();
+
             if (isSite.checked) {
                 socket.emit('datasToPush', {
-                    password: passwordField.value.toString(),
-                    type: "Site",
-                    name: name.toString(),
-                    note: parseInt(note),
-                    keywords: keywords,
-                    linkedVilles: linkedVille,
-                    desc: desc.toString()
+                    password, type, name,
+                     note, keywords,
+                    linkedVille, desc
                 });
                 postToChat("Envoi du site");
             }
             if (isVille.checked) {
                 socket.emit('datasToPush', {
-                    password: passwordField.value.toString(),
-                    type: "Ville",
-                    name: name.toString(),
-                    note: parseInt(note),
-                    keywords: keywords,
-                    departement: linkedDepartement,
-                    sites: sites,
-                    desc: desc.toString()
+                    password, type, name,
+                    note, keywords,
+                    departement, sites, desc
                 });
                 postToChat("Envoi de la ville");
             }
             if (isDepartement.checked) {
                 socket.emit('datasToPush', {
-                    password: passwordField.value.toString(),
-                    type: "Departement",
-                    name: name.toString(),
-                    note: parseInt(note),
-                    keywords: keywords,
-                    villes: villes,
-                    desc: desc.toString()
+                    password, type, name,
+                    note, keywords,
+                    villes, desc
                 });
                 postToChat("Envoi du departement");
             }
-
         }
         else
             postLogToChat("Erreur dans les données renseignées ou le mot de passe, annulation de l'envoi en base de données")
@@ -396,7 +388,7 @@
     });
 
     socket.on('logForApp', function(data){
-        console.log("Socket reçu");
+        console.log(`Socket reçu`);
         postLogToChat(data.err);
     });
 
@@ -410,16 +402,11 @@
     dataTypeCheckboxes.addEventListener('click', function () {
         isDepartement.checked || isVille.checked || isSite.checked ?
          (form.nameField.style.display = "inline", form.noteField.style.display = "inline", form.descField.style.display = "inline") : function () {
-            for (element in form){
+            for (var element in form){
                 form[element].style.display ="none";
             }
         };
 
-        if (isDepartement.checked || isVille.checked || isSite.checked){
-            form.nameField.style.display = "inline";
-            form.noteField.style.display = "inline";
-            form.descField.style.display = "inline";
-        }
         if (isDepartement.checked){
             form.villesListField.style.display = "inline";
             form.keywordsField.style.display = "none";
@@ -457,10 +444,10 @@
         isAdviceDisplayed ? advices.style.display = "inline-block" : advices.style.display = "none";
     });
     form.send.addEventListener('click', function(e){
-       pushIntoDatabase(form.nameField.value, form.noteField.value, form.keywordsField.value,
+        e.preventDefault();
+        pushIntoDatabase(form.nameField.value, form.noteField.value, form.keywordsField.value,
                form.descField.value, form.sitesListField.value, form.villesListField.value,
                form.linkedDepartementField.value, form.linkedVilleField.value);
-        e.preventDefault();
     });
 
 

@@ -6,6 +6,7 @@ var basicPassword = "laboheme55";
 
 function sendLastDatas(socket, items){
     socket.emit('lastDatas', {datas: items});
+    console.log("Données envoyées");
 }
 function sendLogForClient(socket, log){
     socket.emit('logForApp', {err:log});
@@ -52,55 +53,32 @@ mongo.connect(serverAddress, function (err, db) {
             if (passwordCheck(data)) {
                 if (data.note > 0 && data.note <=5) {
                     var date = new Date();
-                    if (data.type == "Departement") {
-                        console.log('revieved data');
-                        db.collection('ititourContent', function (err, col) {
-                            col.insert({
-                                type: data.type,
-                                name: data.name,
-                                note: data.note,
-                                keywords: data.keywords,
-                                villes: data.villes,
-                                desc: data.desc,
-                                date: date
-                            });
-                        });
-                    }
-                    else if (data.type == "Ville") {
-                        db.collection('ititourContent', function (err, col) {
-                            col.insert({
-                                type: data.type,
-                                name: data.name,
-                                note: data.note,
-                                keywords: data.keywords,
-                                departement: data.departement,
-                                sites: data.sites,
-                                desc: data.desc,
-                                date: date
-                            });
-                        });
-                    }
-                    else if (data.type == "Site") {
-                        db.collection('ititourContent', function (err, col) {
-                            col.insert({
-                                type: data.type,
-                                name: data.name,
-                                note: data.note,
-                                keywords: data.keywords,
-                                linkedVilles: data.linkedVilles,
-                                desc: data.desc,
-                                date: date
-                            });
-                        });
-                    }
-                    db.collection('ititourContent').find().sort({date:-1}).limit(1).toArray().then(function(items){
-                        sendLastDatas(socket,items);
-                    });
+                    var dataToPush = {
+                        type: data.type, name: data.name,
+                        note: data.note, keywords: data.keywords,
+                        desc: data.desc, date
+                    };
 
+                    db.collection('ititourContent', function (err, col) {
+                        console.log(`Réception de données, tentative d'insertion dans ${col}`);
+                        if (data.type == "Departement") {
+                            dataToPush.villes = data.villes;
+                            col.insert(dataToPush);
+                        }
+                        else if (data.type == "Ville") {
+                            dataToPush.departement = data.departement;
+                            dataToPush.sites = data.sites;
+                            col.insert(dataToPush);
+                        }
+                        else if (data.type == "Site") {
+                            dataToPush.linkedVilles = data.linkedVilles;
+                            col.insert(dataToPush);
+                        }
+                        sendLastDatas(socket, {datas:dataToPush});
+                    });
                 }
                 else
                     sendLogForClient(socket, "Données non valides (vérifiez l'orthographe et les champs saisits)");
-
             }
             else sendBadPassword(socket);
         });
@@ -112,7 +90,7 @@ mongo.connect(serverAddress, function (err, db) {
 
                 doc.findOneAndDelete({"_id":idToDelete}, function (err, results) {
                     console.log(results);
-                    if (results.result.n > 0) {
+                    if (results.result && results.result.n > 0) {
                         modifiedDataConfirmation(socket, "deletion", idToDelete);
                     } else {
                         sendLogForClient(socket, "Aucune correspondance trouvée");
