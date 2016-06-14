@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Remplisseur de base de données</title>
-    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-    <script src="https://code.jquery.com/jquery-2.2.4.js"
-            integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
-            crossorigin="anonymous"></script>
+
     <style>
         body{
             margin:0;
@@ -187,10 +184,10 @@
 
         <form class="datasForm">
             <input type="text" placeholder="Le nom du departement/village/site" id="name">
-            <input type="text" placeholder="Le nom du département où se situe cette ville/village" id="linkedDepartement">
-            <input type="text" placeholder="Le nom de la ville où se situe ce site touristique" id="linkedVille">
             <input type="number" placeholder="Note de 0 à 5" id="note">
             <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par une virgule)" id="keywords">
+            <input type="text" placeholder="Le nom du département où se situe cette ville/village" id="linkedDepartement">
+            <input type="text" placeholder="Le nom de la ville où se situe ce site touristique" id="linkedVille">
             <input type="text" placeholder="Liste des villes et villages du département séparés par une virgule" id="villagesList">
             <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par une virgule" id="sitesList">
             <textarea id="desc" placeholder="Description de l'élément"></textarea>
@@ -214,11 +211,17 @@
             </ul>
         </div>
         <div id="chat"></div>
+        <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+        <script src="https://code.jquery.com/jquery-2.2.4.js"
+                integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+                crossorigin="anonymous"></script>
     </body>
 </html>
 
 
 <script>
+console.time("Timer Global");
     var form = {descField: document.getElementById('desc'),
         nameField: document.getElementById('name'),
         linkedDepartementField: document.getElementById('linkedDepartement'),
@@ -228,30 +231,25 @@
         villesListField : document.getElementById('villagesList'),
         sitesListField : document.getElementById('sitesList'),
         send : document.getElementById('send')
-    };
-    var passwordField = document.getElementById('password');
+    },
+            isDepartement = document.getElementById('isDepartement'),
+            isVille = document.getElementById('isVille'),
+            isSite = document.getElementById('isSite'),
+            passwordField = document.getElementById('password'),
+            dataTypeCheckboxes = document.getElementById('dataType'),
+            advicesButton = document.getElementById('advicesButton'),
+            advices = document.getElementById('advices'),
+            chat = document.getElementById('chat'),
 
-    var dataTypeCheckboxes = document.getElementById('dataType');
-    var isDepartement = document.getElementById('isDepartement');
-    var isVille = document.getElementById('isVille');
-    var isSite = document.getElementById('isSite');
-
-    var advicesButton = document.getElementById('advicesButton');
-    var advices = document.getElementById('advices');
-    var chat = document.getElementById('chat');
-
-    var server = ('192.168.0.32:8080');
-    var socket = io.connect(server);
+            server = ('192.168.0.32:8080'), socket = io.connect(server);
 
     String.prototype.capitalizeFirstLetter = function() {
         return this.charAt(0).toUpperCase() + this.slice(1);
     };
-
     Array.prototype.fieldDataCorrectAfterSplit = function(){
-        $.trim(this);
-        for (var thing in this){
-            this[thing] = $.trim(this[thing]);
-            this[thing] = this[thing].capitalizeFirstLetter();
+        for (var i=0, x = this.length; i < x; i++){
+            this[i] = $.trim(this[i]);
+            this[i] = this[i].capitalizeFirstLetter();
         }
         return this;
     };
@@ -259,7 +257,6 @@
     function pageScroll() {
         chat.scrollTop = chat.scrollHeight;
     }
-
     function postToChat(data){
         var parag = document.createElement("p");
         parag.classList.add('post');
@@ -283,61 +280,75 @@
         }
     }
 
-
     function postDatasIntoChat(data){
         /* On récupère les données que le serveur nous envoie, on les filtre puis on les poste dans le "chat"
         *  avec le serveur
         */
-        console.log("Datas : " + data.datas.type);
-            for (dataFromDb in data.datas) {
-                var div = document.createElement("div");
-                var parag = document.createElement("ul");
-                var suppressButton = document.createElement("a");
-                var title = document.createElement("h4");
+        var fragment = document.createDocumentFragment();
 
-                suppressButton.classList.add("suppress");
-                div.classList.add('datasFromDatabase');
-                title.classList.add("datasFromDatabaseType");
+        for (var dataFromDb in data.datas) {
+            var objectReceived = data.datas[dataFromDb];
 
-                //On vérifie que cet élément ne soit pas déjà présent sur la page avant de lui donner l'id de l'objet
-                if (!document.getElementById(data.datas[dataFromDb]._id)) {
-                    div.id = data.datas[dataFromDb]._id;
-                    suppressButton.classList.add(data.datas[dataFromDb]._id);
+            if(!data.datas.hasOwnProperty(dataFromDb)) continue;
 
-                    suppressButton.addEventListener('click', function (e) {
-                        var confirm = (window.confirm('Voullez vous réllement supprimer cette entrée ? Cette action est irreversible'));
-                        if (confirm) {
-                            var id = (e.target.className.split(" ")[1]).toString();
-                            socket.emit('askForDeletion', {
-                                password: passwordField.value,
-                                id:id
-                            });
-                        }
-                    });
-                }
-                for (var subArray in data.datas[dataFromDb]) {
+            var div = document.createElement("div"),
+             parag = document.createElement("ul"),
+             suppressButton = document.createElement("a"),
+             title = document.createElement("h4");
 
-                    if (subArray.toString() == "_id" || subArray.toString() == "date"
-                            || subArray.toString() == "__proto__" || data.datas[dataFromDb][subArray] == undefined)
-                            continue;
+            suppressButton.classList.add("suppress");
+            div.classList.add('datasFromDatabase');
+            title.classList.add("datasFromDatabaseType");
 
-                    if(subArray.toString() == "type") {
-                        title.appendChild(document.createTextNode(data.datas[dataFromDb][subArray]));
+            //On vérifie que cet élément ne soit pas déjà présent sur la page avant de lui donner l'id de l'objet
+            if (!document.getElementById(objectReceived._id)) {
+                div.id = objectReceived._id;
+                suppressButton.classList.add(objectReceived._id);
+                suppressButton.addEventListener('click', function (e) {
+                    var confirm = (window.confirm('Voullez vous réllement supprimer cette entrée ? Cette action est irreversible'));
+                    if (confirm) {
+                        var id = (e.target.className.split(" ")[1]).toString();
+                        socket.emit('askForDeletion', {
+                            password: passwordField.value,
+                            id: id
+                        });
+                    }
+                });
+            }
+            if (objectReceived._id != undefined) {
+                for (var subArray in objectReceived) {
+                    var dataToPost = objectReceived[subArray];
 
+                    if (!objectReceived.hasOwnProperty(subArray) || subArray.toString() == "_id"
+                            || subArray.toString() == "date" || subArray.toString() == "__proto__"
+                            || dataToPost == undefined)
+                        continue;
+
+                    if (subArray.toString() == "type") {
+                        title.appendChild(document.createTextNode(dataToPost));
                     }
                     else {
                         var datasIntoChat = document.createElement("li");
-                        datasIntoChat.appendChild(document.createTextNode(`${subArray.toString()} : ${data.datas[dataFromDb][subArray]}`));
+                        if (subArray.toString() == "keywords" || subArray.toString() == "sites"
+                                || subArray.toString() == "villes") {
+                            var list = dataToPost.join(", ");
+                            datasIntoChat.appendChild(document.createTextNode(`${subArray.toString()} : ${list}`));
+                        }
+                        else
+                        datasIntoChat.appendChild(document.createTextNode(`${subArray.toString()} : ${dataToPost}`));
                     }
-                    if(datasIntoChat) parag.appendChild(datasIntoChat);
+
+                    if (datasIntoChat) parag.appendChild(datasIntoChat);
 
                     div.appendChild(title);
                     div.appendChild(suppressButton);
                     div.appendChild(parag);
                 }
-                if(data.datas[dataFromDb]._id != undefined)
-                    chat.appendChild(div);
+                fragment.appendChild(div);
             }
+        }
+        chat.appendChild(fragment);
+
         pageScroll();
     }
 
@@ -351,93 +362,59 @@
             sites = convertToArrayAndCorrectData(sites);
             var type = isDepartement.checked ? "Departement" : isVille.checked ? "Ville" : isSite.checked ? "Site" : undefined;
             var password = passwordField.value.toString();
+            var toSend = {password, type, name, note, keywords, desc};
 
-            if (isSite.checked) {
-                socket.emit('datasToPush', {
-                    password, type, name,
-                     note, keywords,
-                    linkedVille, desc
-                });
-                postToChat("Envoi du site");
+            if (isDepartement.checked) {
+                toSend.villes = villes;
+                socket.emit('datasToPush', toSend);
+                postToChat("Envoi du departement");
             }
             if (isVille.checked) {
-                socket.emit('datasToPush', {
-                    password, type, name,
-                    note, keywords,
-                    departement, sites, desc
-                });
+                toSend.departement = departement;
+                toSend.sites = sites;
+                socket.emit('datasToPush', toSend);
                 postToChat("Envoi de la ville");
             }
-            if (isDepartement.checked) {
-                socket.emit('datasToPush', {
-                    password, type, name,
-                    note, keywords,
-                    villes, desc
-                });
-                postToChat("Envoi du departement");
+            if (isSite.checked) {
+                toSend.linkedVille = linkedVille;
+                socket.emit('datasToPush', toSend);
+                postToChat("Envoi du site");
             }
         }
         else
             postLogToChat("Erreur dans les données renseignées ou le mot de passe, annulation de l'envoi en base de données")
     }
 
-// ----------------- Here starts the "loop" -----------------
+// -------------------------------------- Here starts the "loop" --------------------------------------------------------
 
     socket.on('lastDatas', function (data) {
         postDatasIntoChat(data);
     });
-
     socket.on('logForApp', function(data){
         console.log(`Socket reçu`);
         postLogToChat(data.err);
     });
-
     socket.on('confirmation', function (data) {
         if (data.confirmationType == "deletion"){
             document.getElementById(data.dataId.toString()).remove();
             console.log(data.dataId);
         }
     });
-
     dataTypeCheckboxes.addEventListener('click', function () {
+        for (var element in form) form[element].style.display = "none";
         isDepartement.checked || isVille.checked || isSite.checked ?
-         (form.nameField.style.display = "inline", form.noteField.style.display = "inline", form.descField.style.display = "inline") : function () {
-            for (var element in form){
-                form[element].style.display ="none";
-            }
-        };
-
-        if (isDepartement.checked){
-            form.villesListField.style.display = "inline";
-            form.keywordsField.style.display = "none";
-            form.sitesListField.style.display = "none";
-            form.linkedDepartementField.style.display = "none";
-            form.linkedVilleField.style.display = "none";
-            form.send.style.display = "inline";
-
-        }
+         (form.nameField.style.display = "inline", form.noteField.style.display = "inline",
+          form.descField.style.display = "inline", form.send.style.display = "inline",
+          form.keywordsField.style.display = "inline") : '';
+        if(isDepartement.checked) form.villesListField.style.display = "inline";
+        else if (isSite.checked) form.linkedVilleField.style.display = "inline";
         else if (isVille.checked){
             form.linkedDepartementField.style.display = "inline";
-            form.linkedVilleField.style.display = "none";
-            form.villesListField.style.display = "none";
-            form.keywordsField.style.display = "inline";
             form.sitesListField.style.display = "inline";
-            form.send.style.display = "inline";
-
-        }
-        else if (isSite.checked){
-            form.villesListField.style.display = "none";
-            form.keywordsField.style.display = "inline";
-            form.sitesListField.style.display = "none";
-            form.linkedDepartementField.style.display = "none";
-            form.linkedVilleField.style.display = "inline";
-            form.send.style.display = "inline";
-
         }
     });
 
     var isAdviceDisplayed = false;
-
     advicesButton.addEventListener('click', function (e) {
         e.preventDefault();
         isAdviceDisplayed = !isAdviceDisplayed;
@@ -449,8 +426,5 @@
                form.descField.value, form.sitesListField.value, form.villesListField.value,
                form.linkedDepartementField.value, form.linkedVilleField.value);
     });
-
-
-
-
+console.timeEnd("Timer Global");
 </script>

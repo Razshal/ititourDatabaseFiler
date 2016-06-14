@@ -11,15 +11,14 @@ function sendLastDatas(socket, items){
 function sendLogForClient(socket, log){
     socket.emit('logForApp', {err:log});
 }
-function sendBadPassword(socket){
-    socket.emit('logForApp', {err:"Mot de passe non valide"});
-}
 function modifiedDataConfirmation(socket, confirmationType, dataId){
     socket.emit('confirmation', {
         dataId: dataId,
         confirmationType: confirmationType});
 }
-function passwordCheck(data){
+function passwordCheck(data, socket){
+    var check = data.password == basicPassword;
+    if (!check) sendLogForClient(socket, "Erreur : mot de passe non valide");
     return data.password == basicPassword;
 }
 
@@ -50,7 +49,7 @@ mongo.connect(serverAddress, function (err, db) {
             }
         );
         socket.on('datasToPush', function (data) {
-            if (passwordCheck(data)) {
+            if (passwordCheck(data, socket)) {
                 if (data.note > 0 && data.note <=5) {
                     var date = new Date();
                     var dataToPush = {
@@ -80,11 +79,10 @@ mongo.connect(serverAddress, function (err, db) {
                 else
                     sendLogForClient(socket, "Données non valides (vérifiez l'orthographe et les champs saisits)");
             }
-            else sendBadPassword(socket);
         });
 
         socket.on('askForDeletion', function(data){
-            if (passwordCheck(data)) {
+            if (passwordCheck(data, socket)) {
                 var idToDelete = data.id;
                 console.log(idToDelete);
 
@@ -98,9 +96,8 @@ mongo.connect(serverAddress, function (err, db) {
                     }
                 });
             }
-            else sendBadPassword(socket);
         });
-
+        /*
         if (socket.request.connection.remoteAddress == "::ffff:192.168.0.27")
             setTimeout(function () {
                 sendLogForClient(socket,"Bonjour Valentin !");
@@ -110,5 +107,6 @@ mongo.connect(serverAddress, function (err, db) {
             setTimeout(function () {
                 sendLogForClient(socket,"Bonjour Mathieu !");
             }, 2000);
+        */
     });
 });
