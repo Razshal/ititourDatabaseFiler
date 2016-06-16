@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Remplisseur de base de données</title>
-
     <style>
         body{
             margin:0;
@@ -25,7 +24,6 @@
             border-radius : 10px;
             resize: both;
         }
-
         .datasFromDatabase, .log, .post, #advices{
             display: inline-flex;
             flex-direction: row;
@@ -49,7 +47,6 @@
             border-top-right-radius: 10px;
             background-color: lightslategray;
         }
-
         .post{
             color: white;
             background-color: coral;
@@ -58,7 +55,6 @@
             text-align: center;
             min-height:30px;
             line-height: 30px;
-            width: 40vw;
             margin-left: auto;
             margin-right: auto;
         }
@@ -111,17 +107,14 @@
             color: black;
             resize:both;
         }
-
         input[type="radio"]{
             min-height: 16px;
             min-width: 16px;
         }
-
         #name,#note,#keywords,#villagesList, #sitesList,
         #desc,#send,#advices, #linkedDepartement, #linkedVille{
             display: none;
         }
-
         #send, #advicesButton {
             margin: 10px;
         }
@@ -130,7 +123,6 @@
             color: black;
             border: 2px solid #555555;
         }
-
         #advices, h1, .datasFromDatabase, #send, #advicesButton {
             color: #e7e7e7;
             background-color: dimgray;
@@ -171,7 +163,6 @@
         li{
             margin-left: 10px;
         }
-
     </style>
 </head>
     <body>
@@ -236,17 +227,17 @@ console.time("Timer Global");
         sitesListField : document.getElementById('sitesList'),
         send : document.getElementById('send')
     },
-            isDepartement = document.getElementById('isDepartement'),
-            isVille = document.getElementById('isVille'),
-            isSite = document.getElementById('isSite'),
-            passwordField = document.getElementById('password'),
-            dataTypeCheckboxes = document.getElementById('dataType'),
-            advicesButton = document.getElementById('advicesButton'),
-            advices = document.getElementById('advices'),
-            chat = document.getElementById('chat'),
-            logChat = document.getElementById('logChat'),
+        isDepartement = document.getElementById('isDepartement'),
+        isVille = document.getElementById('isVille'),
+        isSite = document.getElementById('isSite'),
+        passwordField = document.getElementById('password'),
+        dataTypeCheckboxes = document.getElementById('dataType'),
+        advicesButton = document.getElementById('advicesButton'),
+        advices = document.getElementById('advices'),
+        chat = document.getElementById('chat'),
+        logChat = document.getElementById('logChat'),
 
-            server = ('192.168.0.32:8080'), socket = io.connect(server);
+        server = ('192.168.0.32:8080'), socket = io.connect(server);
 
     String.prototype.capitalizeFirstLetter = function() {
         return this.charAt(0).toUpperCase() + this.slice(1);
@@ -258,16 +249,15 @@ console.time("Timer Global");
         }
         return this;
     };
-
-    function pageScroll() {
-        chat.scrollTop = chat.scrollHeight;
+    function pageScroll(divToScroll) {
+        divToScroll.scrollTop = divToScroll.scrollHeight;
     }
     function postToChat(data){
         var parag = document.createElement("p");
         parag.classList.add('post');
         parag.appendChild(document.createTextNode(data));
-        chat.appendChild(parag);
-        pageScroll();
+        logChat.appendChild(parag);
+        pageScroll(logChat);
     }
     function postLogToChat(data){
         var date = new Date();
@@ -275,7 +265,7 @@ console.time("Timer Global");
         parag.classList.add('log');
         parag.appendChild(document.createTextNode(`${date.getHours()}:${date.getMinutes()} ${date.getSeconds()}s - ${data}`));
         logChat.appendChild(parag);
-        pageScroll();
+        pageScroll(logChat);
     }
     function convertToArrayAndCorrectData(something) {
         if (something) {
@@ -285,7 +275,6 @@ console.time("Timer Global");
             return something;
         }
     }
-
     function postDatasIntoChat(data){
         /* On récupère les données que le serveur nous envoie, on les filtre puis on les poste dans le "chat"
         *  avec le serveur
@@ -293,14 +282,14 @@ console.time("Timer Global");
         var fragment = document.createDocumentFragment();
 
         for (var dataFromDb in data.datas) {
-            var objectReceived = data.datas[dataFromDb];
+            if(!data.datas.hasOwnProperty(dataFromDb))
+                continue;
 
-            if(!data.datas.hasOwnProperty(dataFromDb)) continue;
-
-            var div = document.createElement("div"),
-             parag = document.createElement("ul"),
-             suppressButton = document.createElement("a"),
-             title = document.createElement("h4");
+            var objectReceived = data.datas[dataFromDb],
+                    div = document.createElement("div"),
+                    parag = document.createElement("ul"),
+                    suppressButton = document.createElement("a"),
+                    title = document.createElement("h4");
 
             suppressButton.classList.add("suppress");
             div.classList.add('datasFromDatabase');
@@ -310,13 +299,16 @@ console.time("Timer Global");
             if (!document.getElementById(objectReceived._id)) {
                 div.id = objectReceived._id;
                 suppressButton.classList.add(objectReceived._id);
+                suppressButton.classList.add(objectReceived.type);
                 suppressButton.addEventListener('click', function (e) {
                     var confirm = (window.confirm('Voullez vous réllement supprimer cette entrée ? Cette action est irreversible'));
                     if (confirm) {
-                        var id = (e.target.className.split(" ")[1]).toString();
+                        var id = (e.target.className.split(" ")[1]).toString(),
+                        type = (e.target.className.split(" ")[2]).toString();
                         socket.emit('askForDeletion', {
                             password: passwordField.value,
-                            id: id
+                            id: id,
+                            type: type
                         });
                     }
                 });
@@ -331,6 +323,7 @@ console.time("Timer Global");
                         continue;
 
                     if (subArray.toString() == "type") {
+                        console.log(`${subArray.toString()} : ${dataToPost}`);
                         title.appendChild(document.createTextNode(dataToPost));
                     }
                     else {
@@ -355,7 +348,7 @@ console.time("Timer Global");
         }
         chat.appendChild(fragment);
 
-        pageScroll();
+        pageScroll(chat);
     }
 
     function pushIntoDatabase(name, note, keywords, desc, sites,
@@ -366,9 +359,11 @@ console.time("Timer Global");
             keywords = convertToArrayAndCorrectData(keywords);
             villes = convertToArrayAndCorrectData(villes);
             sites = convertToArrayAndCorrectData(sites);
-            var type = isDepartement.checked ? "Departement" : isVille.checked ? "Ville" : isSite.checked ? "Site" : undefined;
-            var password = passwordField.value.toString();
-            var toSend = {password, type, name, note, keywords, desc};
+            var type = isDepartement.checked ? "Departement" :
+                    isVille.checked ? "Ville" :
+                    isSite.checked ? "Site" : undefined,
+                password = passwordField.value.toString(),
+                toSend = {password, type, name, note, keywords, desc};
 
             if (isDepartement.checked) {
                 toSend.villes = villes;
@@ -386,14 +381,14 @@ console.time("Timer Global");
                 socket.emit('datasToPush', toSend);
                 postToChat("Envoi du site");
             }
-        }
-        else
+        } else
             postLogToChat("Erreur dans les données renseignées ou le mot de passe, annulation de l'envoi en base de données")
     }
 
 // -------------------------------------- Here starts the "loop" --------------------------------------------------------
 
     socket.on('lastDatas', function (data) {
+        console.log("Data received : " + data.datas.type);
         postDatasIntoChat(data);
     });
     socket.on('logForApp', function(data){
@@ -403,18 +398,26 @@ console.time("Timer Global");
     socket.on('confirmation', function (data) {
         if (data.confirmationType == "deletion"){
             document.getElementById(data.dataId.toString()).remove();
+            postLogToChat(`Suppression de la donnée ${data.dataId} avec succès`);
             console.log(data.dataId);
         }
     });
     dataTypeCheckboxes.addEventListener('click', function () {
         for (var element in form) form[element].style.display = "none";
+
         isDepartement.checked || isVille.checked || isSite.checked ?
          (form.nameField.style.display = "inline", form.noteField.style.display = "inline",
-          form.descField.style.display = "inline", form.send.style.display = "inline",
-          form.keywordsField.style.display = "inline") : '';
-        if(isDepartement.checked) form.villesListField.style.display = "inline";
-        else if (isSite.checked) form.linkedVilleField.style.display = "inline";
+          form.descField.style.display = "inline", form.send.style.display = "inline") : '';
+
+        if(isDepartement.checked){
+            form.villesListField.style.display = "inline";
+        }
+        else if (isSite.checked) {
+            form.keywordsField.style.display = "inline";
+            form.linkedVilleField.style.display = "inline";
+        }
         else if (isVille.checked){
+            form.keywordsField.style.display = "inline";
             form.linkedDepartementField.style.display = "inline";
             form.sitesListField.style.display = "inline";
         }
