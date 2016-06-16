@@ -14,9 +14,10 @@
             margin:0;
             width:100%;
         }
-        #chat{
+        #chat, #logChat{
+            display: inline-block;
             height: 60vh;
-            width: auto;
+            width: 49vw;
             overflow:auto;
             background-color: darkgray;
             font-size : 100%;
@@ -38,6 +39,15 @@
             text-decoration: none;
             text-align: center;
             font-size: 120%;
+            z-index: 0;
+            height:4vh;
+            line-height: 4vh;
+            margin: 0;
+            position: absolute;
+            width: 100%;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            background-color: lightslategray;
         }
 
         .post{
@@ -125,7 +135,9 @@
             color: #e7e7e7;
             background-color: dimgray;
         }
-
+        #advicesButton{
+            display: block;
+        }
         #advices{
             padding: 10px;
             border-radius: 10px;
@@ -134,6 +146,7 @@
         }
         li{
             margin-top: 5px;
+            margin-right: 5px;
         }
         h1{
             margin:0;
@@ -147,23 +160,13 @@
             display: inline;
             position: inherit;
         }
-        h4{
-            z-index: 0;
-            height:4vh;
-            line-height: 4vh;
-            margin: 0;
-            position: absolute;
-            width: 100%;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            background-color: lightslategray;
-        }
         button{
             min-height: 30px;
             border: none;
         }
         ul{
             margin-top: 40px;
+            padding-left: 20px;
         }
         li{
             margin-left: 10px;
@@ -211,6 +214,7 @@
             </ul>
         </div>
         <div id="chat"></div>
+        <div id="logChat"></div>
         <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
         <script src="https://code.jquery.com/jquery-2.2.4.js"
@@ -240,6 +244,7 @@ console.time("Timer Global");
             advicesButton = document.getElementById('advicesButton'),
             advices = document.getElementById('advices'),
             chat = document.getElementById('chat'),
+            logChat = document.getElementById('logChat'),
 
             server = ('192.168.0.32:8080'), socket = io.connect(server);
 
@@ -265,10 +270,11 @@ console.time("Timer Global");
         pageScroll();
     }
     function postLogToChat(data){
+        var date = new Date();
         var parag = document.createElement("p");
         parag.classList.add('log');
-        parag.appendChild(document.createTextNode(data));
-        chat.appendChild(parag);
+        parag.appendChild(document.createTextNode(`${date.getHours()}:${date.getMinutes()} ${date.getSeconds()}s - ${data}`));
+        logChat.appendChild(parag);
         pageScroll();
     }
     function convertToArrayAndCorrectData(something) {
