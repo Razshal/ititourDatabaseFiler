@@ -11,7 +11,7 @@ function sendLastDatas(socket, items){
 function sendLogForClient(socket, log){
     socket.emit('logForApp', {err:log});
 }
-function modifiedDataConfirmation(socket, confirmationType, dataId){
+function sendConfirmationForModifiedData(socket, confirmationType, dataId){
     socket.emit('confirmation', {
         dataId: dataId,
         confirmationType: confirmationType});
@@ -21,8 +21,9 @@ function passwordCheck(data, socket){
     if (!check) sendLogForClient(socket, "Erreur : mot de passe non valide");
     return check;
 }
-function prepareAndSendLastDatasForNewConnection(socket, collectionToSend){
-    collectionToSend.find().sort({"date":-1}).limit(7).toArray().then((items) => {
+function prepareAndSendLastDatasForClient(socket, collectionToSend, limit){
+    var dataLimit = limit ? limit : 7;
+    collectionToSend.find().sort({"date":-1}).limit(dataLimit).toArray().then((items) => {
         for(var item in items){
             if(!items.hasOwnProperty(item)){continue;}
             items[item].type = collectionToSend.collectionName.toString();
@@ -48,8 +49,7 @@ mongo.connect(serverAddress, (err, db) => {
     
     var io = require('socket.io').listen(webServer);
     io.sockets.on('connection', (socket) => {
-        var doc = db.collection('ititourContent'),
-            departementColl = db.collection('Departement'),
+        var departementColl = db.collection('Departement'),
             villeColl = db.collection('Ville'),
             siteColl = db.collection('Site'),
             colls = [departementColl,villeColl,siteColl];
@@ -57,48 +57,47 @@ mongo.connect(serverAddress, (err, db) => {
         console.log("Connexion depuis l'adresse : " + socket.request.connection.remoteAddress);
 
         for(var i=0, x = colls.length; i < x; i++) {
-            prepareAndSendLastDatasForNewConnection(socket, colls[i]);
+            prepareAndSendLastDatasForClient(socket, colls[i]);
         }
 
         socket.on('datasToPush', (data) => {
             if (passwordCheck(data, socket)) {
                 if (data.note > 0 && data.note <=5) {
                     var date = new Date(),
-                        dataToPush = {
+                        dataToPushIntoDB = {
                         name: data.name, note: data.note,
                         desc: data.desc, date
                     },
-                        type = data.type,
+                        dataReceivedType = data.type,
                         lastCollModified;
                     
-                    if(type == "Departement") {
-                        db.collection(type, (err, col) => {
-                            dataToPush.villes = data.villes;
-                            col.insert(dataToPush);
-                            lastCollModified = type;
+                    if(dataReceivedType == "Departement") {
+                        db.collection(dataReceivedType, (err, col) => {
+                            dataToPushIntoDB.villes = data.villes;
+                            col.insert(dataToPushIntoDB);
+                            lastCollModified = dataReceivedType;
                         });
-                    } else if(type == "Ville") {
-                        db.collection(type, (err, col) => {
-                            dataToPush.keywords = data.keywords;
-                            dataToPush.departement = data.departement;
-                            dataToPush.sites = data.sites;
-                            col.insert(dataToPush);
-                            lastCollModified = type;
+                    } else if(dataReceivedType == "Ville") {
+                        db.collection(dataReceivedType, (err, col) => {
+                            dataToPushIntoDB.keywords = data.keywords;
+                            dataToPushIntoDB.departement = data.departement;
+                            dataToPushIntoDB.sites = data.sites;
+                            col.insert(dataToPushIntoDB);
+                            lastCollModified = dataReceivedType;
                         });
-                    } else if (type == "Site") {
-                        db.collection(type, (err, col) => {
-                            dataToPush.keywords = data.keywords;
-                            dataToPush.linkedVilles = data.linkedVilles;
-                            col.insert(dataToPush);
-                            lastCollModified = type;
+                    } else if (dataReceivedType == "Site") {
+                        db.collection(dataReceivedType, (err, col) => {
+                            dataToPushIntoDB.keywords = data.keywords;
+                            dataToPushIntoDB.linkedVilles = data.linkedVilles;
+                            col.insert(dataToPushIntoDB);
+                            lastCollModified = dataReceivedType;
                         });
                     }
                     
-                    if (lastCollModified) {
-                        var newData = db.collection(lastCollModified).find({"date": -1}).limit(1);
-                        newData.type = data.type.toString();
-                        sendLastDatas(newData);
-                        console.log(`J'ai envoyé un(e) ${type} qui contenait ${newData.name}`);
+                    if (lastCollModified){
+                        var collectionToStream = db.collection(lastCollModified);
+                        prepareAndSendLastDatasForClient(socket, collectionToStream, 1);
+
                     }
                 } else
                     sendLogForClient(socket, "Données non valides (vérifiez l'orthographe et les champs saisits)");
@@ -109,12 +108,12 @@ mongo.connect(serverAddress, (err, db) => {
             if (passwordCheck(data, socket) && data.type != undefined) {
                 var idToDelete = (data.id).toString(),
                     collectionDesired = (data.type).toString();
-                console.log(idToDelete);
-                db.collection(collectionDesired).deleteOne({"_id": mongodb.ObjectID(idToDelete)}, (err, results) => { //... here is the problem : no deletion
+                console.log(`User wants to delete : ${idToDelete}`);
+
+                db.collection(collectionDesired).deleteOne({"_id": mongodb.ObjectID(idToDelete)}, (err, results) => {
                     console.log(`Request success : ${results.result.ok}, documents deleted : ${results.result.n}`);
-                    //Request success : 1, documents deleted : 0, so the document is still on my database
                     if (results.result && results.result.n > 0) {
-                        modifiedDataConfirmation(socket, "deletion", idToDelete);
+                        sendConfirmationForModifiedData(socket, "deletion", idToDelete);
                     } else {
                         sendLogForClient(socket, "No matches found");
                         console.log(err);
@@ -122,7 +121,7 @@ mongo.connect(serverAddress, (err, db) => {
                 });
             }
         });
-        
+
         /*
         if (socket.request.connection.remoteAddress == "::ffff:192.168.0.27")
             setTimeout(function () {
