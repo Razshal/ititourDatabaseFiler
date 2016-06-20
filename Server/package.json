@@ -4,6 +4,7 @@
   "description": "Used to fill Ititour's database easily",
   "main": "DatabaseFiller.js",
   "dependencies": {
+    "express": "^4.14.0",
     "http": "^0.0.0",
     "mongodb": "^2.1.20",
     "socketio": "^1.4.6"
@@ -15,4 +16,3 @@
   "author": "Mathieu Fontenille",
   "license": "ISC"
 }
-

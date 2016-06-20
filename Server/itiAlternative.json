@@ -1,0 +1,35 @@
+{
+  "name":"Tour de Toulouse",
+  "days":{
+    "day1":{
+    "step1":{
+      "site": "_idSite",
+      "desc": "Dirigez vous vers le musée machin"
+    },
+    "step2":{
+      "site": "_idSite",
+      "desc": "Dirigez vous vers le musée machin"
+    }
+  },
+    "day2":{
+      "step1":{
+        "site": "_idSite",
+        "desc": "Dirigez vous vers le musée machin"
+      },
+      "step2":{
+        "site": "_idSite",
+        "desc": "Dirigez vous vers le musée machin"
+      }
+    },
+    "day3":{
+      "step1":{
+        "site": "_idSite",
+        "desc": "Dirigez vous vers le musée machin"
+      },
+      "step2":{
+        "site": "_idSite",
+        "desc": "Dirigez vous vers le musée machin"
+      }
+    }
+  }
+}

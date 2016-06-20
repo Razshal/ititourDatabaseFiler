@@ -1,53 +1,30 @@
-var http = require('http');
-var fs = require('fs');
-var mongo = require('mongodb').MongoClient;
+var http = require('http'),
+    fs = require('fs'),
+    mongo = require('mongodb').MongoClient,
+    serverAddress = "mongodb://192.168.0.37:27017/Ititour",
+    basicPassword = "laboheme55",
+    dataManip = require('./DataManipulation'),
+    express = require('express'),
+    app = express();
 const mongodb = require('mongodb');
-var serverAddress = "mongodb://192.168.0.37:27017/Ititour";
-var basicPassword = "laboheme55";
 
-function sendLastDatas(socket, items){
-    socket.emit('lastDatas', {datas: items});
-}
-function sendLogForClient(socket, log){
-    socket.emit('logForApp', {err:log});
-}
-function sendConfirmationForModifiedData(socket, confirmationType, dataId){
-    socket.emit('confirmation', {
-        dataId: dataId,
-        confirmationType: confirmationType});
-}
+
 function passwordCheck(data, socket){
     var check = data.password == basicPassword;
-    if (!check) sendLogForClient(socket, "Erreur : mot de passe non valide");
+    if (!check) dataManip.sendLogForClient(socket, "Erreur : mot de passe non valide");
     return check;
-}
-function prepareAndSendLastDatasForClient(socket, collectionToSend, limit){
-    var dataLimit = limit ? limit : 7;
-    collectionToSend.find().sort({"date":-1}).limit(dataLimit).toArray().then((items) => {
-        for(var item in items){
-            if(!items.hasOwnProperty(item)){continue;}
-            items[item].type = collectionToSend.collectionName.toString();
-        }
-        sendLastDatas(socket,items);
-    });
-    console.log("Données récentes envoyées");
 }
 
 mongo.connect(serverAddress, (err, db) => {
     if (err) console.log("Impossible de se connecter ", err);
-    else console.log("Connection to database:  OK");
+    else console.log(`Connection to database "${db.databaseName}" successful`);
 
-    //On crée le serveur web après avoir réussit à se connecter à la base de données
-    var webServer = http.createServer( (request,response) => {
-        fs.readFile('../Views/DatabaseFillerPageView.html', 'utf-8', (err, data) => {
-            if (err) console.log(err);
-            response.writeHead(200, {'Content-Type': 'text/html'});
-            response.write(data);
-            response.end();
-        });
-    }).listen(8080);
-    
-    var io = require('socket.io').listen(webServer);
+    app.get('/', (request, response)=> {
+        response.sendFile('DatabaseFillerPageView.html', {root:'../Views'})
+    });
+    var server = app.listen(8080);
+    var io = require('socket.io').listen(server);
+
     io.sockets.on('connection', (socket) => {
         var departementColl = db.collection('Departement'),
             villeColl = db.collection('Ville'),
@@ -57,7 +34,7 @@ mongo.connect(serverAddress, (err, db) => {
         console.log("Connexion depuis l'adresse : " + socket.request.connection.remoteAddress);
 
         for(var i=0, x = colls.length; i < x; i++) {
-            prepareAndSendLastDatasForClient(socket, colls[i]);
+            dataManip.prepareAndSendLastDatasForClient(socket, colls[i]);
         }
 
         socket.on('datasToPush', (data) => {
@@ -67,7 +44,7 @@ mongo.connect(serverAddress, (err, db) => {
                         dataToPushIntoDB = {
                         name: data.name, note: data.note,
                         desc: data.desc, date
-                    },
+                        },
                         dataReceivedType = data.type,
                         lastCollModified;
                     
@@ -89,6 +66,7 @@ mongo.connect(serverAddress, (err, db) => {
                         db.collection(dataReceivedType, (err, col) => {
                             dataToPushIntoDB.keywords = data.keywords;
                             dataToPushIntoDB.linkedVilles = data.linkedVilles;
+                            dataToPushIntoDB.address = data.address;
                             col.insert(dataToPushIntoDB);
                             lastCollModified = dataReceivedType;
                         });
@@ -96,11 +74,11 @@ mongo.connect(serverAddress, (err, db) => {
                     
                     if (lastCollModified){
                         var collectionToStream = db.collection(lastCollModified);
-                        prepareAndSendLastDatasForClient(socket, collectionToStream, 1);
+                        dataManip.prepareAndSendLastDatasForClient(socket, collectionToStream, 1, data.name);
 
                     }
                 } else
-                    sendLogForClient(socket, "Données non valides (vérifiez l'orthographe et les champs saisits)");
+                    dataManip.sendLogForClient(socket, "Données non valides (vérifiez l'orthographe et les champs saisits)");
             }
         });
 
@@ -112,10 +90,10 @@ mongo.connect(serverAddress, (err, db) => {
 
                 db.collection(collectionDesired).deleteOne({"_id": mongodb.ObjectID(idToDelete)}, (err, results) => {
                     console.log(`Request success : ${results.result.ok}, documents deleted : ${results.result.n}`);
-                    if (results.result && results.result.n > 0) {
-                        sendConfirmationForModifiedData(socket, "deletion", idToDelete);
+                    if (results.result && results.result.n != undefined && results.result.n > 0) {
+                        dataManip.sendConfirmationForModifiedData(socket, "deletion", idToDelete);
                     } else {
-                        sendLogForClient(socket, "No matches found");
+                        dataManip.sendLogForClient(socket, "No matches found");
                         console.log(err);
                     }
                 });

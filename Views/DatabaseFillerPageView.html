@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-fr">
 <head>
     <meta charset="UTF-8">
     <title>Remplisseur de base de données</title>
@@ -16,14 +16,21 @@
         #chat, #logChat{
             display: inline-block;
             height: 60vh;
-            width: 49vw;
-            overflow:auto;
+
+            overflow: auto;
             background-color: darkgray;
             font-size : 100%;
             margin-bottom: 20px;
             border-radius : 10px;
             resize: both;
         }
+        #chat{
+            width: 55vw;
+        }
+        #logChat {
+            width: 40vw;
+        }
+
         .datasFromDatabase, .log, .post, #advices{
             display: inline-flex;
             flex-direction: row;
@@ -38,8 +45,8 @@
             text-align: center;
             font-size: 120%;
             z-index: 0;
-            height:4vh;
-            line-height: 4vh;
+            height: 30px;
+            line-height: 30px;
             margin: 0;
             position: absolute;
             width: 100%;
@@ -85,11 +92,11 @@
             top:0;
             right:0;
             border-top-right-radius: 10px;
-            height:4vh;
-            width: 50px;
+            height:30px;
+            width: 25px;
             background-color: #c90000;
             text-align: center;
-            line-height: 4vh;
+            line-height: 30px;
             z-index: +5;
         }
         .suppress:after{
@@ -156,7 +163,8 @@
         }
         ul{
             margin-top: 40px;
-            padding-left: 20px;
+            padding-left: 0;
+            list-style-type: none;
         }
         li{
             margin-left: 10px;
@@ -173,17 +181,18 @@
             <input name ="type" type="radio" id="isVille">Ville/Village
             <input name ="type" type="radio" id="isSite">Site touristique
         </form>
-
+        <p></p>
         <form class="datasForm">
             <input type="text" placeholder="Le nom du departement/village/site" id="name">
             <input type="number" placeholder="Note de 0 à 5" id="note">
             <input type="text" placeholder="Mots clés (chaque mot clé doit être séparé par une virgule)" id="keywords">
             <input type="text" placeholder="Le nom du département où se situe cette ville/village" id="linkedDepartement">
+            <input type="text" placeholder="L'adresse du site tourstique (ou la plus proche possible)" id="address">
             <input type="text" placeholder="Le nom de la ville où se situe ce site touristique" id="linkedVille">
             <input type="text" placeholder="Liste des villes et villages du département séparés par une virgule" id="villagesList">
             <input type="text" placeholder="Liste des sites touristiques de la ville/village séparés par une virgule" id="sitesList">
             <textarea id="desc" placeholder="Description de l'élément"></textarea>
-            <button id="send">Envoyer directement dans la base de données</button>
+            <button id="send">Envoyer dans la base de données</button>
         </form>
 
         <button id="advicesButton">Afficher la notice d'utilisation</button>

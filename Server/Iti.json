@@ -1,0 +1,7 @@
+{
+  "name":"Tour de Toulouse",
+  "days":[
+    [ ["site1", "desc1"], ["site2", "desc2"], "etc" ],
+    [ ["site1", "desc1"], ["site2", "desc2"], "etc" ]
+  ]
+}
