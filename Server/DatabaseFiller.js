@@ -1,11 +1,14 @@
-var http = require('http'),
-    fs = require('fs'),
-    mongo = require('mongodb').MongoClient,
-    serverAddress = "mongodb://192.168.0.37:27017/Ititour",
+var serverAddress = "mongodb://192.168.0.37:27017/Ititour",
     basicPassword = "laboheme55",
     dataManip = require('./DataManipulation'),
     express = require('express'),
-    app = express();
+    app = express(),
+    mongo = require('mongodb').MongoClient,
+    server = require('http').createServer(app),
+    io = require('socket.io').listen(server);
+
+server.listen(8080);
+
 const mongodb = require('mongodb');
 
 
@@ -22,8 +25,7 @@ mongo.connect(serverAddress, (err, db) => {
     app.get('/', (request, response)=> {
         response.sendFile('DatabaseFillerPageView.html', {root:'../Views'})
     });
-    var server = app.listen(8080);
-    var io = require('socket.io').listen(server);
+
 
     io.sockets.on('connection', (socket) => {
         var departementColl = db.collection('Departement'),
