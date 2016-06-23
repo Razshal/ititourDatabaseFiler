@@ -1,36 +1,9 @@
 {
   "name":"Tour de Toulouse",
-  "daysNumber":3,
-  "days":{
-    "day1":{
-    "step1":{
-      "site": "_idSite",
-      "desc": "Dirigez vous vers le musée machin"
-    },
-    "step2":{
-      "site": "_idSite",
-      "desc": "Dirigez vous vers le musée truc"
-    }
-  },
-    "day2":{
-      "step1":{
-        "site": "_idSite",
-        "desc": "Dirigez vous vers le musée mescouilles"
-      },
-      "step2":{
-        "site": "_idSite",
-        "desc": "Dirigez vous vers le musée je sais pas"
-      }
-    },
-    "day3":{
-      "step1":{
-        "site": "_idSite",
-        "desc": "Dirigez vous vers rien"
-      },
-      "step2":{
-        "site": "_idSite",
-        "desc": "Dirigez vous vers oui"
-      }
-    }
-  }
+  "days":
+    [
+      [[{"site": "_idSite", "desc": "Dirigez vous vers le musée machin"}],[{"site": "_idSite", "desc": "Dirigez vous vers le musée truc"}]],
+      [[{"site": "_idSite", "desc": "Dirigez vous vers le musée mescouilles"}], [{"site": "_idSite", "desc": "Dirigez vous vers le musée je sais pas"}]],
+      [[{"site": "_idSite", "desc": "Dirigez vous vers rien"}],[{"site": "_idSite", "desc": "Dirigez vous vers oui"}]]
+    ]
 }
