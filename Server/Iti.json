@@ -1,8 +1,0 @@
-{
-  "name":"Tour de Toulouse",
-  "days":[
-    [ ["site1", "Dirigez vous vers le musée machin"], ["site2", "Regardez le ciel"] ],
-    [ ["site3", "desc3"], ["site4", "desc4"] ],
-    [ ["site5", "desc5"], ["site6", "desc6"] ]
-  ]
-}

@@ -1,9 +1,140 @@
-{
-  "name":"Tour de Toulouse",
-  "days":
+{"iti1" :{
+  "name": "Tour de Toulouse",
+  "days": [
     [
-      [[{"site": "_idSite", "desc": "Dirigez vous vers le musée machin"}],[{"site": "_idSite", "desc": "Dirigez vous vers le musée truc"}]],
-      [[{"site": "_idSite", "desc": "Dirigez vous vers le musée mescouilles"}], [{"site": "_idSite", "desc": "Dirigez vous vers le musée je sais pas"}]],
-      [[{"site": "_idSite", "desc": "Dirigez vous vers rien"}],[{"site": "_idSite", "desc": "Dirigez vous vers oui"}]]
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée machin"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée truc"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée mescouilles"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée je sais pas"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers rien"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers oui"
+        }
+      ]
     ]
+  ]
+},"iti2" :{
+  "name": "Tour de Toulouse",
+  "days": [
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée machin"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée truc"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée mescouilles"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée je sais pas"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers rien"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers non"
+        }
+      ]
+    ]
+  ]
+},"iti3" :{
+  "name": "Tour de Toulouse",
+  "days": [
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée gfdgfhfg"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée aaaaaaaaah"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers le musée moncul"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Aujourd'hui neptune et jupiter sont alignées, ce qui est particulièrement bon pour votre energie cosmique"
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers votre avenir"
+        }
+      ],
+      [
+        {
+          "site": "_idSite",
+          "desc": "Dirigez vous vers non"
+        }
+      ]
+    ]
+  ]
+}
 }

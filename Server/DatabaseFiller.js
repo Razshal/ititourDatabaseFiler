@@ -1,11 +1,11 @@
-var serverAddress = "mongodb://192.168.0.37:27017/Ititour",
-    basicPassword = "laboheme55",
+var basicPassword = "laboheme55",
     dataManip = require('./DataManipulation'),
     express = require('express'),
     app = express(),
     mongo = require('mongodb').MongoClient,
     server = require('http').createServer(app),
-    io = require('socket.io').listen(server);
+    io = require('socket.io').listen(server),
+    config = require('./config.json');
 
 server.listen(8080);
 
@@ -18,7 +18,7 @@ function passwordCheck(data, socket){
     return check;
 }
 
-mongo.connect(serverAddress, (err, db) => {
+mongo.connect(config.databaseAddress, (err, db) => {
     if (err) console.log("Impossible de se connecter ", err);
     else console.log(`Connection to database "${db.databaseName}" successful`);
 
@@ -101,17 +101,5 @@ mongo.connect(serverAddress, (err, db) => {
                 });
             }
         });
-
-        /*
-        if (socket.request.connection.remoteAddress == "::ffff:192.168.0.27")
-            setTimeout(function () {
-                sendLogForClient(socket,"Bonjour Valentin !");
-            }, 2000);
-
-        if (socket.request.connection.remoteAddress == "::ffff:192.168.0.32")
-            setTimeout(function () {
-                sendLogForClient(socket,"Bonjour Mathieu !");
-            }, 2000);
-        */
     });
 });
